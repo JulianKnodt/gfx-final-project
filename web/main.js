@@ -1,4 +1,4 @@
-window.onload = () => {
+window.onload = async () => {
   if (!window.fetch)
     throw "This browser does not support fetch, many things may break";
   // reloads the shaders
@@ -9,8 +9,8 @@ window.onload = () => {
     vert_shader = await vert_shader;
     window.frag_shader = await frag_shader.text();
     window.vert_shader = await vert_shader.text();
+    return [window.frag_shader, window.vert_shader];
   };
-  reload();
   const canvas = document.getElementById('c');
   const context = canvas.getContext('webgl');
   const resizeCanvas = () => {
@@ -20,4 +20,7 @@ window.onload = () => {
   }
   window.addEventListener('resize', resizeCanvas, false);
   resizeCanvas();
+  const [f_src, v_src] = await reload();
+  // Loads a new scene after reloading
+  window.scene = new Scene();
 };
