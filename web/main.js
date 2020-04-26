@@ -11,16 +11,9 @@ window.onload = async () => {
     window.vert_shader = await vert_shader.text();
     return [window.frag_shader, window.vert_shader];
   };
-  const canvas = document.getElementById('c');
-  const context = canvas.getContext('webgl');
-  const resizeCanvas = () => {
-    canvas.width = window.innerWidth-10;
-    canvas.height = window.innerHeight;
-    // TODO redraw here
-  }
-  window.addEventListener('resize', resizeCanvas, false);
-  resizeCanvas();
   const [f_src, v_src] = await reload();
   // Loads a new scene after reloading
-  window.scene = new Scene();
+  window.scene = new Scene(f_src, v_src);
+
+  window.addEventListener('resize', scene.resize.bind(scene), false);
 };
