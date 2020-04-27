@@ -8,13 +8,12 @@ const deg_to_rad = deg => deg * Math.PI/180;
 
 class Scene {
   constructor(frag_src, vert_src) {
+    this.start = performance.now();
     // Attributes of the scene
-    this.frame = 0;
     this.view_matrix = new THREE.Matrix4();
-    // TODO add more here so we can play around more
-
-    this.needsRender = true;
-
+    this.look_at(); // set view to be default
+    // keep a log of the uniforms for debugging purposes
+    this.uniforms = {};
 
     this.canvas = document.getElementById("c");
     this.gl = this.canvas.getContext("webgl");
@@ -27,28 +26,26 @@ class Scene {
     // this.log = () => {}; // uncomment this line to remove debug output
     this.program = this.attachShaders(frag_src, vert_src);
     this.gl.useProgram(this.program);
-    this.writeUniform("width", "1f", this.canvas.width);
-    this.writeUniform("height", "1f", this.canvas.height);
 
-    const positionLocation = this.gl.getAttribLocation(this.program, "a_position");
-    this.gl.enableVertexAttribArray(positionLocation);
-
-    const positions = new Float32Array([
-      // Bottom left triangle
-      -1, -1,
-      -1, 1,
-      1, -1,
-      // Top right triangle
-      1, 1,
-      -1, 1,
-      1, -1,
-    ]);
-    this.writeBuffer(positions);
-    this.gl.vertexAttribPointer(positionLocation, 2, this.gl.FLOAT, false, 0, 0);
-    // set an integer indicating the frame number
-    this.start = performance.now();
-    // draw after sizing it correctly
+    this.frame = 0;
     this.resize();
+  }
+  add_verts(v) {
+    if (v.length == 0) return;
+    assert(v.length % 3 == 0);
+    const v_loc = this.gl.getAttribLocation(this.program, "v");
+    this.gl.enableVertexAttribArray(v_loc);
+    this.writeBuffer(new Float32Array(v));
+    this.gl.vertexAttribPointer(positionLocation, v.length/3, this.gl.FLOAT, false, 0, 0);
+    this.triangles = v.length/3;
+  }
+  add_normals(vn) {
+    if (vn.length == 0) return;
+    assert(vn.length % 3 == 0);
+    const vn_loc = this.gl.getAttribLocation(this.program, "vn");
+    this.gl.enableVertexAttribArray(vn_loc);
+    this.writeBuffer(new Float32Array(vn));
+    this.gl.vertexAttribPointer(positionLocation, vn.length/3, this.gl.FLOAT, true, 0, 0);
   }
   initShader(src, isVertex) {
     const gl = this.gl;
@@ -56,7 +53,6 @@ class Scene {
     gl.shaderSource(shader, src);
     gl.compileShader(shader);
     const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-    // TODO maybe update a local variable instead of returning
     if (success) return shader;
     this.log(gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
@@ -71,9 +67,9 @@ class Scene {
     this.log(this.gl.getProgramInfoLog(program));
     this.gl.deleteProgram(program);
   }
-  // Writes a uniform to this GLSL shader
-  // Which is essentially a global variable
+  // Writes a uniform to this GLSL shader which is variable accessible to all shaders
   writeUniform(name, glslType, v0 = 0, v1 = 0, v2 = 0) {
+    this.uniforms[name] = {type: glslType, v0, v1, v2};
     this.gl["uniform" + glslType](this.gl.getUniformLocation(this.program, name), v0, v1, v2);
   }
   writeBuffer(data) {
@@ -88,23 +84,31 @@ class Scene {
     this.gl.viewportWidth = this.canvas.width;
     this.gl.viewportHeight = this.canvas.height;
     this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
-    this.writeUniform("iResolution", "2i", this.gl.viewportWidth, this.gl.viewportHeight);
-    this.render()
+    this.writeUniform("iResolution", "2f", this.gl.viewportWidth, this.gl.viewportHeight);
+    this.writeUniform("width", "1f", this.canvas.width);
+    this.writeUniform("height", "1f", this.canvas.height);
   }
-  lookAt(pos, at, up) {
+  look_at(pos, at, up) {
     if (!pos) pos = new THREE.Vector3();
     if (!at) at = new THREE.Vector3(0, 0, 1);
     if (!up) up = new THREE.Vector3(0, 1, 0);
     this.view_matrix.lookAt(pos, at, up);
   }
   render() {
-    if (!this.needsRender) return;
+    this.frame = this.frame + 1;
     this.writeUniform("iTime", "1f", performance.now() - this.start);
-    this.writeUniform("iFrame", "1i", this.frame);
     this.writeUniform("camera", "Matrix4fv", false, this.view_matrix.elements);
-    this.frame += 1;
-    this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
-    this.needsRender = false;
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.num_triangles);
   }
+  set frame(frame) {
+    this._frame = frame;
+    this.writeUniform("frame", "1f", frame);
+  }
+  get frame() { return this._frame; }
+  set fov(fov) {
+    this._fov = fov;
+    this.writeUniform("fov", "1f", fov);
+  }
+  get fov() { return this._fov; }
 }
 
