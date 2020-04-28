@@ -48,9 +48,9 @@ const parse_mtl = src => {
 const get_mtl = async mtl_file => fetch("/resources/" + mtl_file);
 
 // Parses v/vt/vn for faces
-const parse_slashed = str => str.split("/").map(Number);
+const parse_slashed = str => str.split("/").map(Number).map(it => it - 1);
 
-const default_group = ({
+const default_group = () => ({
   name: "",
   mtl: -1,
   // which indices to use
@@ -73,27 +73,30 @@ const parse_obj = async src => {
     let [cmd, ...rest] = l.split(" ");
     switch (cmd) {
     case undefined:
+    case "":
     case "c": break;
     case "v":
-      out.v.push(rest.map(Number));
+      out.v.push(rest.map(Number).map(v => v - 1));
       break;
     case "vn":
-      out.vn.push(rest.map(Number));
+      out.vn.push(rest.map(Number).map(v => v - 1));
       break;
     case "vt":
       // TODO
       break;
     case "f":
       const parts = rest.map(parse_slashed);
-      for (let i = 0; i < parts.len() - 2; i++) curr_group.idxs.push(parts);
+      for (let i = 0; i < parts.length - 2; i++) curr_group.idxs.push(parts);
       break
     case "g":
-      if (curr_group.idx.length !== 0) out.groups.push(curr_group);
+      if (curr_group.idxs.length !== 0) out.groups.push(curr_group);
       curr_group = default_group();
       curr_group = rest[0];
       break;
     default: console.log("Unsupported OBJ command: ", l);
     }
   }
+  if (curr_group.idxs.length !== 0) out.groups.push(curr_group);
   return out;
 };
+
