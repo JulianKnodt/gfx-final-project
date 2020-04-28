@@ -55,7 +55,6 @@ const default_group = () => ({
   mtl: -1,
   // which indices to use
   idxs: [],
-  // textures can be ignored for now
 });
 
 const parse_obj = async src => {
