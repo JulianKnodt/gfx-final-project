@@ -14,14 +14,16 @@ const mtl_default = () => ({
 
 const assign_mtl_defaults = mtl => Object.assign(mtl_default(), mtl);
 
-const parse_mtl = src => {
+const parse_mtl = (src, log=console.log) => {
   // map of name -> MTL
   const mtls = {};
   // current MTL
-  const curr = mtl_default();
+  let curr = mtl_default();
   for (let l of src.split("\n")) {
-    let [cmd, ...rest] = l.split(" ");
+    let [cmd, ...rest] = l.trim().split(" ");
     switch (cmd) {
+    case "":
+    case "#": break
     case "newmtl":
       if (curr.name !== "") mtls[curr.name] = curr;
       curr = mtl_default();
@@ -30,6 +32,21 @@ const parse_mtl = src => {
     case "Ns":
       curr.Ns = Number(rest[0]);
       break;
+    case "d":
+      curr.d = Number(rest[0]);
+      break
+    case "illum":
+      curr.illum = Number(rest[0]);
+      break
+    case "Ni":
+      curr.Ni = Number(rest[0]);
+      break
+    case "Tr":
+      curr.Tr = Number(rest[0]);
+      break
+    case "Tf":
+      curr.Tf = rest.map(Number);
+      break
     case "Ka":
       curr.Ka = rest.map(Number)
       break;
@@ -38,6 +55,9 @@ const parse_mtl = src => {
       break;
     case "Ks":
       curr.Ks = rest.map(Number)
+      break;
+    case "Ke":
+      curr.Ke = rest.map(Number)
       break;
     default: console.log("Unsupported MTL command", l);
     };
@@ -52,12 +72,12 @@ const parse_slashed = str => str.split("/").map(Number).map(it => it - 1);
 
 const default_group = () => ({
   name: "",
-  mtl: -1,
+  mtl: "",
   // which indices to use
   idxs: [],
 });
 
-const parse_obj = async src => {
+async function parse_obj(src, get_mtl=get_mtl, log=console.log) {
   const out = {
     // vertices
     v: [],
@@ -65,15 +85,15 @@ const parse_obj = async src => {
     vn: [],
     // vertex textures(vt) can be ignored for now
     groups: [],
-    mtls: [],
+    mtls: {},
   };
-  const curr_group = default_group();
+  let curr_group = default_group();
   for (let l of src.split("\n")) {
     let [cmd, ...rest] = l.split(" ");
     switch (cmd) {
     case undefined:
     case "":
-    case "c": break;
+    case "#": break;
     case "v":
       out.v.push(rest.map(Number).map(v => v - 1));
       break;
@@ -87,12 +107,19 @@ const parse_obj = async src => {
       const parts = rest.map(parse_slashed);
       for (let i = 0; i < parts.length - 2; i++) curr_group.idxs.push(parts);
       break
+    case "mtllib":
+      const mtl_src = await get_mtl(rest[0]);
+      Object.assign(out.mtls, parse_mtl(mtl_src, log));
+      break;
+    case "usemtl":
+      curr_group.mtl = rest[0];
+      break;
     case "g":
       if (curr_group.idxs.length !== 0) out.groups.push(curr_group);
       curr_group = default_group();
-      curr_group = rest[0];
+      curr_group.name = rest[0];
       break;
-    default: console.log("Unsupported OBJ command: ", l);
+    default: log("Unsupported OBJ command: ", l);
     }
   }
   if (curr_group.idxs.length !== 0) out.groups.push(curr_group);
