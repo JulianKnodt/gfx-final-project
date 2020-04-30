@@ -56,18 +56,30 @@ class Scene {
     if (v.length == 0) return;
     assert(v.length % 3 == 0);
     const v_loc = this.gl.getAttribLocation(this.program, "v");
+    this.vertices = new Float32Array(v);
     this.gl.enableVertexAttribArray(v_loc);
-    this.writeBuffer(new Float32Array(v));
+    this.writeBuffer(this.vertices);
     this.gl.vertexAttribPointer(v_loc, 3, this.gl.FLOAT, false, 0, 0);
     this.triangles = v.length/3;
   }
   add_normals(vn) {
     if (vn.length == 0) return;
-    assert(vn.length % 3 == 0);
+    assert(vn.length % 3 == 0, "normals do not seem correct");
+    this.normals = new Float32Array(vn);
     const vn_loc = this.gl.getAttribLocation(this.program, "vn");
     this.gl.enableVertexAttribArray(vn_loc);
-    this.writeBuffer(new Float32Array(vn));
+    this.writeBuffer(this.normals);
     this.gl.vertexAttribPointer(vn_loc, 3, this.gl.FLOAT, true, 0, 0);
+  }
+  // add colors to the scene, one per vertex
+  add_colors(c) {
+    if (c.length == 0) return;
+    assert(c.length % 3 == 0, "colors are invalid length");
+    this.colors = new Float32Array(c);
+    const c_loc = this.gl.getAttribLocation(this.program, "c");
+    this.gl.enableVertexAttribArray(c_loc);
+    this.writeBuffer(this.colors);
+    this.gl.vertexAttribPointer(c_loc, 3, this.gl.FLOAT, false, 0, 0);
   }
   initShader(src, isVertex) {
     const gl = this.gl;
@@ -109,7 +121,6 @@ class Scene {
     this.gl.viewportWidth = this.canvas.width;
     this.gl.viewportHeight = this.canvas.height;
     this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
-    // this.screen_to_raster(this.gl.viewportWidth, this.gl.viewportHeight, -100, -100, 100, 100);
   }
   look_at() {
     const up = this.up.normalize();

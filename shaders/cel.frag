@@ -8,9 +8,9 @@ uniform int iFrame;
 
 varying vec3 w_v;
 varying vec3 w_n;
-varying vec3 w_c;
 
-// DEBUG shader
+const int partitions = 10;
+
 void main() {
-  gl_FragColor = vec4(w_c, 1);
+  gl_FragColor = vec4(w_n, 1);
 }
