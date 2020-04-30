@@ -80,6 +80,13 @@ const default_group = () => ({
   idxs: [],
 });
 
+const triangulate = vs => {
+  const out = [];
+  const fixed = vs[0];
+  for (let i = 1; i < vs.length-1; i++) out.push([fixed, vs[i], vs[i+1]]);
+  return out;
+};
+
 async function parse_obj(src, load_mtl=get_mtl, log=console.log) {
   const out = {
     // vertices
@@ -93,6 +100,7 @@ async function parse_obj(src, load_mtl=get_mtl, log=console.log) {
   let curr_group = default_group();
   for (let l of src.split("\n")) {
     let [cmd, ...rest] = l.trim().split(" ");
+    if (cmd.startsWith("#")) continue;
     switch (cmd) {
     case undefined:
     case "":
@@ -108,11 +116,13 @@ async function parse_obj(src, load_mtl=get_mtl, log=console.log) {
     case "vt":
       // TODO
       break;
+    case "s":
+      // TODO explicitly not supported yet
+      break;
     case "f":
       const parts = rest.map(parse_slashed);
-      for (let i = 0; i < parts.length - 2; i++)
-        curr_group.idxs.push([parts[i], parts[i+1], parts[i+2]]);
-      break
+      curr_group.idxs.push(...triangulate(parts));
+      break;
     case "mtllib":
       const mtl_src = await load_mtl(rest[0]);
       Object.assign(out.mtls, parse_mtl(mtl_src, log));

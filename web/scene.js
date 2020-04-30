@@ -141,7 +141,7 @@ class Scene {
     // this.writeUniform("clip_to_cam", "Matrix4fv", MAT_T, [...cam_to_clip.elements]);
     return cam_to_clip;
   }
-  perspective(fov) {
+  perspective(fov=90) {
     const cam_to_clip = new THREE.Matrix4();
     const aspect = 1/Math.tan(deg_to_rad(fov)/2);
     cam_to_clip.elements = [

@@ -1,3 +1,6 @@
+let rot_deg = 1;
+let speed = 0.1;
+
 window.onload = async () => {
   if (!window.fetch)
     throw "This browser does not support fetch, many things may break";
@@ -21,10 +24,10 @@ window.onload = async () => {
     scene.render();
   }, false);
   window.addEventListener('keydown', e => {
-    if (e.which == 37) scene.rotateHorizontal(5);
-    else if (e.which == 39) scene.rotateHorizontal(-5);
-    else if (e.which == 38) scene.moveForward(0.1);
-    else if (e.which == 40) scene.moveForward(-0.1);
+    if (e.which == 37) scene.rotateHorizontal(-rot_deg);
+    else if (e.which == 39) scene.rotateHorizontal(rot_deg);
+    else if (e.which == 38) scene.moveForward(-speed);
+    else if (e.which == 40) scene.moveForward(speed);
     scene.render();
   });
 };
