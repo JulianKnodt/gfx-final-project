@@ -65,7 +65,10 @@ const parse_mtl = (src, log=console.log) => {
   return mtls;
 };
 
-const get_mtl = async mtl_file => fetch("/resources/" + mtl_file);
+async function get_mtl(mtl_file) {
+  const mtl = await fetch("/resources/" + mtl_file);
+  return mtl.text();
+}
 
 // Parses v/vt/vn for faces
 const parse_slashed = str => str.split("/").map(Number).map(it => it - 1);
@@ -77,7 +80,7 @@ const default_group = () => ({
   idxs: [],
 });
 
-async function parse_obj(src, get_mtl=get_mtl, log=console.log) {
+async function parse_obj(src, load_mtl=get_mtl, log=console.log) {
   const out = {
     // vertices
     v: [],
@@ -89,26 +92,29 @@ async function parse_obj(src, get_mtl=get_mtl, log=console.log) {
   };
   let curr_group = default_group();
   for (let l of src.split("\n")) {
-    let [cmd, ...rest] = l.split(" ");
+    let [cmd, ...rest] = l.trim().split(" ");
     switch (cmd) {
     case undefined:
     case "":
     case "#": break;
     case "v":
-      out.v.push(rest.map(Number).map(v => v - 1));
+      const v = rest.filter(it => it !== "").map(Number).map(v => v - 1);
+      out.v.push(v);
       break;
     case "vn":
-      out.vn.push(rest.map(Number).map(v => v - 1));
+      const vn = rest.filter(it => it !== "").map(Number).map(vn => vn - 1);
+      out.vn.push(vn);
       break;
     case "vt":
       // TODO
       break;
     case "f":
       const parts = rest.map(parse_slashed);
-      for (let i = 0; i < parts.length - 2; i++) curr_group.idxs.push(parts);
+      for (let i = 0; i < parts.length - 2; i++)
+        curr_group.idxs.push([parts[i], parts[i+1], parts[i+2]]);
       break
     case "mtllib":
-      const mtl_src = await get_mtl(rest[0]);
+      const mtl_src = await load_mtl(rest[0]);
       Object.assign(out.mtls, parse_mtl(mtl_src, log));
       break;
     case "usemtl":

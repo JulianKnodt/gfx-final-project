@@ -6,7 +6,7 @@ const assert = (value, error) => {
 }
 
 const n = 0.1;
-const f = 100;
+const f = 1000;
 const cross = ([x, y, z], [i, j, k]) => ([
     y * k - z * j,
     z * i - x * k,
@@ -47,7 +47,8 @@ class Scene {
     this.at = new THREE.Vector3(0, 0, -1);
     this.up = new THREE.Vector3(0, 1, 0);
     this.look_at();
-    this.orthographic();
+    // this.orthographic();
+    this.perspective(30);
     this.resize();
     this.gl.enable(this.gl.DEPTH_TEST);
   }
@@ -136,6 +137,20 @@ class Scene {
       0, 0, -(f+n)/(f-n), 1
     ];
     this.writeUniform("cam_to_clip", "Matrix4fv", MAT_T, [...cam_to_clip.elements]);
+    // cam.to_clip.getInverse(cam_to_clip);
+    // this.writeUniform("clip_to_cam", "Matrix4fv", MAT_T, [...cam_to_clip.elements]);
+    return cam_to_clip;
+  }
+  perspective(fov) {
+    const cam_to_clip = new THREE.Matrix4();
+    const aspect = 1/Math.tan(deg_to_rad(fov)/2);
+    cam_to_clip.elements = [
+      aspect * n/1, 0, 0, 0,
+      0, aspect * n/1, 0, 0,
+      0, 0, -(f+n)/(f-n), -1,
+      0, 0, -2*f*n/(f-n), 0,
+    ];
+    this.writeUniform("cam_to_clip", "Matrix4fv", MAT_T, [...cam_to_clip.elements]);
     // this.writeUniform("clip_to_cam", "Matrix4fv", MAT_T, [...cam_to_clip.getInverse(cam_to_clip).elements]);
     return cam_to_clip;
   }
@@ -148,13 +163,6 @@ class Scene {
     this.pos.addScaledVector(this.at, speed);
     this.look_at();
   }
-  /*
-  // TODO add a perspective matrix
-  perspective(fov) {
-    const mat = new THREE.Matrix4();
-    mat.set(
-  }
-  */
   render() {
     this.frame = this.frame + 1;
     this.writeUniform("time", "1f", performance.now() - this.start);

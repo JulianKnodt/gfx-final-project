@@ -4,7 +4,9 @@ const fs = require('fs');
 eval(String(fs.readFileSync("./obj.js")));
 
 const sponza = String(fs.readFileSync("../resources/sponza.obj"));
-const get_mtl = name => String(fs.readFileSync(`../resources/${name}`));
+const local_mtl = name => String(fs.readFileSync(`../resources/${name}`));
 
-parse_obj(sponza, get_mtl).then(console.log);
+parse_obj(sponza, local_mtl).then(it => {
+  console.log(it.groups[0].idxs);
+});
 

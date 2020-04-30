@@ -38,9 +38,7 @@ const load_obj = async (name, add_norms=false) => {
   // const vt = [];
   for (let group of obj.groups) {
     for (let [[v0, vt0, vn0], [v1, vt1, vn1], [v2, vt2, vn2]] of group.idxs) {
-      const v0d = obj.v[v0];
-      const v1d = obj.v[v1];
-      const v2d = obj.v[v2];
+      const [v0d, v1d, v2d] = [obj.v[v0], obj.v[v1], obj.v[v2]];
       v.push(...v0d, ...v1d, ...v2d);
       if (vn0 === undefined && vn1 === undefined && vn2 === undefined) {
         if (add_norms) {
