@@ -27,14 +27,10 @@ const MAT_T = false;
 class Scene {
   constructor(frag_src, vert_src) {
     this.start = performance.now();
-    // Attributes of the scene
-    // keep a log of the uniforms for debugging purposes
     this.uniforms = {};
     this.canvas = document.getElementById("c");
     this.gl = this.canvas.getContext("webgl");
-    if (!this.gl) {
-      throw "WebGL not supported in this browser";
-    }
+    if (!this.gl) throw "WebGL not supported in this browser";
     this.gl.clearColor(0, 0, 0, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     this.log = console.log;
@@ -47,9 +43,11 @@ class Scene {
     this.at = new THREE.Vector3(0, 0, -1);
     this.up = new THREE.Vector3(0, 1, 0);
     this.look_at();
-    // this.orthographic();
     this.perspective(30);
     this.resize();
+    this.shading_constant = 0.3;
+    this.edge_threshold = 0.3;
+
     this.gl.enable(this.gl.DEPTH_TEST);
   }
   add_verts(v) {
@@ -81,6 +79,16 @@ class Scene {
     this.writeBuffer(this.colors);
     this.gl.vertexAttribPointer(c_loc, 3, this.gl.FLOAT, false, 0, 0);
   }
+  add_vertex_textures(vt) {
+    return
+    if (vt.length == 0) return;
+    assert(vt.length % 3 == 0, "colors are invalid length");
+    this.vertex_textures = new Float32Array(c);
+    const vt_loc = this.gl.getAttribLocation(this.program, "vt");
+    this.gl.enableVertexAttribArray(vt_loc);
+    this.writeBuffer(this.vertex_textures);
+    this.gl.vertexAttribPointer(vt_loc, 3, this.gl.FLOAT, false, 0, 0);
+  }
   initShader(src, isVertex) {
     const gl = this.gl;
     const shader = gl.createShader(isVertex ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
@@ -103,9 +111,10 @@ class Scene {
   }
   // Writes a uniform to this GLSL shader which is variable accessible to all shaders
   writeUniform(name, glslType, v0 = 0, v1 = 0, v2 = 0) {
-    this.uniforms[name] = {type: glslType, v0, v1, v2};
+    this.uniforms[name] = {glslType, v0, v1, v2};
     assert(this.program != null, "Tried to write uniform to null program");
     const loc = this.gl.getUniformLocation(this.program, name);
+    if (loc === null) this.log(`${name} appears to be unused or invalid`);
     // assert(loc != null, `Null location for ${name}: ${loc}`);
     this.gl["uniform" + glslType](loc, v0, v1, v2);
   }
@@ -123,6 +132,7 @@ class Scene {
     this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
   }
   look_at() {
+    const prev = this.uniforms["world_to_cam"];
     const up = this.up.normalize();
     const dir = this.at.normalize();
     const r = this.at.clone().cross(this.up);
@@ -134,10 +144,22 @@ class Scene {
       dir.x, dir.y, dir.z, 0,
       pos.x, pos.y, pos.z, 1,
     ];
-    // this.writeUniform("cam_to_world", "Matrix4fv", MAT_T, mat.elements);
+    this.writeUniform("cam_to_world", "Matrix4fv", MAT_T, cam_to_world.elements);
     this.writeUniform("world_to_cam", "Matrix4fv", MAT_T, [...cam_to_world.getInverse(cam_to_world).elements]);
     return cam_to_world;
   }
+  render() {
+    // this.frame = this.frame + 1;
+    // this.writeUniform("time", "1f", performance.now() - this.start);
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.triangles);
+  }
+
+  set frame(frame) {
+    this._frame = frame;
+    this.writeUniform("frame", "1f", frame);
+  }
+  get frame() { return this._frame; }
+
   // use an orthographic camera to project things
   orthographic() {
     const cam_to_clip = new THREE.Matrix4();
@@ -165,6 +187,27 @@ class Scene {
     // this.writeUniform("clip_to_cam", "Matrix4fv", MAT_T, [...cam_to_clip.getInverse(cam_to_clip).elements]);
     return cam_to_clip;
   }
+  add_brush_texture(name) {
+    const gl = this.gl;
+    const txt = load_texture("/resources/" + name, gl);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, txt);
+    this.writeUniform("brush_texture", "1i", 0);
+  }
+  add_shading_texture(name) {
+    const gl = this.gl;
+    const txt = load_texture("/resources/" + name, gl);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, txt);
+    this.writeUniform("shading_texture", "1i", 1);
+  }
+
+  set shading_constant(t) { this.writeUniform("shading_constant", "1f", t); }
+  get shading_constant() { return this.uniforms["shading_constant"].v0; }
+
+  set edge_threshold(t) { this.writeUniform("edge_threshold", "1f", t); }
+  get edge_threshold() { return this.uniforms["edge_threshold"].v0; }
+
   rotateHorizontal(theta) {
     this.at.applyAxisAngle(this.up, deg_to_rad(theta));
     this.at.normalize();
@@ -174,20 +217,5 @@ class Scene {
     this.pos.addScaledVector(this.at, speed);
     this.look_at();
   }
-  render() {
-    this.frame = this.frame + 1;
-    this.writeUniform("time", "1f", performance.now() - this.start);
-    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.triangles);
-    /*
-    this.log(`Rendered
-      vertices: ${this.triangles}
-      state:`, this.uniforms);
-    */
-  }
-  set frame(frame) {
-    this._frame = frame;
-    this.writeUniform("frame", "1f", frame);
-  }
-  get frame() { return this._frame; }
 }
 

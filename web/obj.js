@@ -59,7 +59,17 @@ const parse_mtl = (src, log=console.log) => {
     case "Ke":
       curr.Ke = rest.map(Number)
       break;
-    default: console.log("Unsupported MTL command", l);
+    case "map_Ka": curr.map_Ka = rest[0];
+      break
+    case "map_Kd": curr.map_Kd = rest[0];
+      break
+    case "map_Ke": curr.map_Ke = rest[0];
+      break
+    case "bump":
+    case "map_bump":
+      curr.map_bump = rest[0];
+      break
+    default: log("Unsupported MTL command", l);
     };
   }
   return mtls;
@@ -71,12 +81,13 @@ async function get_mtl(mtl_file) {
 }
 
 // Parses v/vt/vn for faces
-const parse_slashed = str => str.split("/").map(Number).map(it => it - 1);
+const parse_slashed = str => str.split("/")
+  .map(Number)
+  .map(it => typeof it === "number" ? it - 1 : it);
 
 const default_group = () => ({
   name: "",
   mtl: "",
-  // which indices to use
   idxs: [],
 });
 
@@ -93,7 +104,8 @@ async function parse_obj(src, load_mtl=get_mtl, log=console.log) {
     v: [],
     // vertex normals
     vn: [],
-    // vertex textures(vt) can be ignored for now
+    // vertex texture coordinates
+    vt: [],
     groups: [],
     mtls: {},
   };
@@ -114,7 +126,8 @@ async function parse_obj(src, load_mtl=get_mtl, log=console.log) {
       out.vn.push(vn);
       break;
     case "vt":
-      // TODO
+      const vt = rest.filter(it => it !== "").map(Number).map(vt => vt - 1);
+      out.vt.push(vt);
       break;
     case "s":
       // TODO explicitly not supported yet
