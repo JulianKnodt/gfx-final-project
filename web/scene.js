@@ -7,18 +7,7 @@ const assert = (value, error) => {
 
 const n = 0.1;
 const f = 1000;
-const cross = ([x, y, z], [i, j, k]) => ([
-    y * k - z * j,
-    z * i - x * k,
-    x * j - y * i,
-]);
 
-const normalize = ([x, y, z]) => {
-  const magn = Math.sqrt(x*x + y*y + z*z);
-  return [x/magn, y/magn, z/magn];
-};
-
-const sub = ([x, y, z], [i, j, k]) => [x-i, y-j, z-k];
 const deg_to_rad = deg => deg * Math.PI/180;
 
 // Must pass false to transpose matrix
@@ -40,13 +29,14 @@ class Scene {
 
     this.frame = 0;
     this.pos = new THREE.Vector3(0, 0, 0);
-    this.at = new THREE.Vector3(0, 0, -1);
+    this.at = new THREE.Vector3(0, 0, 1);
     this.up = new THREE.Vector3(0, 1, 0);
     this.look_at();
     this.perspective(30);
     this.resize();
     this.shading_constant = 0.3;
     this.edge_threshold = 0.3;
+    this.shading_smoothness = 0.1;
 
     this.gl.enable(this.gl.DEPTH_TEST);
   }
@@ -207,6 +197,9 @@ class Scene {
 
   set edge_threshold(t) { this.writeUniform("edge_threshold", "1f", t); }
   get edge_threshold() { return this.uniforms["edge_threshold"].v0; }
+
+  set shading_smoothness(t) { this.writeUniform("smoothing", "1f", t); }
+  get shading_smoothness() { return this.uniforms["smoothing"].v0; }
 
   rotateHorizontal(theta) {
     this.at.applyAxisAngle(this.up, deg_to_rad(theta));

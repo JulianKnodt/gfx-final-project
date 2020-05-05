@@ -53,37 +53,66 @@ window.onload = async () => {
 
 const build_menu = scene => {
   const gui = new dat.GUI();
+  const scene_settings = {
+    "use default normals": true,
+    "source": "sekiro.obj",
+    "brush type": "brush1.jpg",
+    "shading_constant": 0.3,
+    "edge_threshold": 0.1,
+    "smoothness": 0.1,
+    "fov": 30,
+  };
   const camera = gui.addFolder('camera');
   camera.add({
     orthographic: scene.orthographic.bind(scene),
   }, "orthographic")
     .onFinishChange(scene.render.bind(scene));
   camera.add({
-    perspective: scene.perspective.bind(scene, 30),
+    perspective: () => scene.perspective(scene_settings.fov),
   }, "perspective").onFinishChange(scene.render.bind(scene));
+  camera.add(scene_settings, "fov", 5, 180).step(1)
+    .onChange(it => {
+      scene.perspective(it)
+      scene.render();
+    });
   camera.add(movement, "speed");
   camera.add(movement, "rotation degrees");
   const s = gui.addFolder('scene');
-  s.add({"source":"sponza.obj"}, "source", ["teapot.obj", "sponza.obj", "sekiro.obj"])
-    .onFinishChange(src => load_obj(src, true));
-  load_obj("sekiro.obj", true);
+  s.add(scene_settings, "use default normals")
+    .onFinishChange(it => load_obj(scene_settings["source"], it));
+  s.add({"source":"sekiro.obj"}, "source",
+    ["teapot.obj", "sponza.obj", "sekiro.obj", "Shujiro_Castle.obj", "torii.obj"])
+    .onFinishChange(src => load_obj(src, scene_settings["use default normals"]));
+  load_obj(scene_settings.source, scene_settings["use default normals"]);
 
-  s.add({"brush type": "brush1.jpg"}, "brush type", ["brush1.jpg"])
-    .onFinishChange(scene.add_brush_texture.bind(scene));
-  scene.add_brush_texture("brush1.jpg");
+
+  s.add(scene_settings, "brush type", ["brush1.jpg", "brush2.jpg"])
+    .onFinishChange(txt => {
+      scene.add_brush_texture(txt);
+      scene.render();
+    });
+  scene.add_brush_texture(scene_settings["brush type"]);
 
   s.add({"shading texture": "shading1.png"}, "shading texture",
     ["shading1.png", "shading2.png"])
     .onFinishChange(scene.add_shading_texture.bind(scene));
   scene.add_shading_texture("shading1.png");
-  s.add({"shading constant": 0.3}, "shading constant", 0, 2)
+
+  const drawing = s.addFolder("Drawing");
+  // random shading constant
+  drawing.add(scene_settings, "shading_constant", 0, 3)
     .onChange(it => {
       scene.shading_constant = it;
       scene.render();
     });
-  s.add({"edge threshold": 0.3}, "edge threshold", 0, 1)
+  drawing.add(scene_settings, "edge_threshold", 0, 1)
     .onChange(it => {
       scene.edge_threshold = it;
+      scene.render();
+    });
+  drawing.add(scene_settings, "smoothness", 0, 1)
+    .onChange(it => {
+      scene.shading_smoothness = it;
       scene.render();
     });
 };
@@ -92,6 +121,8 @@ const load_obj = async (name, add_norms=false) => {
   const obj_fetch = await fetch("/resources/" + name);
   const obj_src = await obj_fetch.text();
   const obj = await parse_obj(obj_src);
+  if (add_norms) obj.vn = default_normals(obj);
+
   const v = [];
   const vn = [];
   const c = [];
@@ -100,12 +131,9 @@ const load_obj = async (name, add_norms=false) => {
     for (let [[v0, vt0, vn0], [v1, vt1, vn1], [v2, vt2, vn2]] of group.idxs) {
       const [v0d, v1d, v2d] = [obj.v[v0], obj.v[v1], obj.v[v2]];
       v.push(...v0d, ...v1d, ...v2d);
-      if (vn0 === undefined && vn1 === undefined && vn2 === undefined) {
-        if (add_norms) {
-          const def_norm = normalize(cross(sub(v0d, v1d), sub(v0d, v2d)));
-          vn.push(...def_norm, ...def_norm, ...def_norm);
-        }
-      } else vn.push(...obj.vn[vn0], ...obj.vn[vn1], ...obj.vn[vn2]);
+      if (add_norms) vn.push(...obj.vn[v0], ...obj.vn[v1],  ...obj.vn[v2]);
+      else if (obj.vn[vn0] && obj.vn[vn1] && obj.vn[vn2])
+        vn.push(...obj.vn[vn0], ...obj.vn[vn1], ...obj.vn[vn2]);
       if (obj.vt[vt0] && obj.vt[vt1] && obj.vt[vt2])
         vt.push(...obj.vt[vt0], ...obj.vt[vt1], ...obj.vt[vt2]);
 
@@ -145,6 +173,7 @@ const load_texture = (url, gl) => {
        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     }
+    window.scene.render();
   };
   img.src = url;
 

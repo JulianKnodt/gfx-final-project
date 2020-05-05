@@ -85,18 +85,18 @@ const parse_slashed = str => str.split("/")
   .map(Number)
   .map(it => typeof it === "number" ? it - 1 : it);
 
-const default_group = () => ({
-  name: "",
-  mtl: "",
-  idxs: [],
-});
-
 const triangulate = vs => {
   const out = [];
   const fixed = vs[0];
   for (let i = 1; i < vs.length-1; i++) out.push([fixed, vs[i], vs[i+1]]);
   return out;
 };
+
+const default_group = () => ({
+  name: "",
+  mtl: "",
+  idxs: [],
+});
 
 async function parse_obj(src, load_mtl=get_mtl, log=console.log) {
   const out = {
