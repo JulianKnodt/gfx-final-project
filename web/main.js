@@ -61,6 +61,9 @@ const build_menu = scene => {
     "edge_threshold": 0.1,
     "smoothness": 0.1,
     "fov": 30,
+    "x-pos": 0,
+    "y-pos": 0,
+    "z-pos": 0
   };
   const camera = gui.addFolder('camera');
   camera.add({
@@ -75,6 +78,34 @@ const build_menu = scene => {
       scene.perspective(it)
       scene.render();
     });
+  camera.add(scene_settings, "x-pos", -100, 100)
+    .onChange(it => {
+      scene.pos.x = it;
+      scene.look_at();
+      scene.render();
+    });
+  camera.add(scene_settings, "y-pos", -100, 100)
+    .onChange(it => {
+      scene.pos.y = it;
+      scene.look_at();
+      scene.render();
+    });
+  camera.add(scene_settings, "z-pos", -100, 100)
+    .onChange(it => {
+      scene.pos.z = it;
+      scene.look_at();
+      scene.render();
+    });
+  camera.add({
+    "reset": function() {
+      scene.pos.x = 0;
+      scene.pos.y = 0;
+      scene.pos.z = 0;
+
+      scene.look_at();
+      scene.render();
+    }
+  }, "reset");
   camera.add(movement, "speed");
   camera.add(movement, "rotation degrees");
   const s = gui.addFolder('scene');
