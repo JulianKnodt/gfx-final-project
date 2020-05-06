@@ -22,6 +22,8 @@ varying vec4 prev_v;
 // uniform sampler2D bump_map;
 uniform sampler2D brush_texture;
 
+uniform sampler2D shading_texture;
+
 uniform float edge_threshold;
 uniform float shading_constant;
 uniform float smoothing;
@@ -95,5 +97,6 @@ vec4 shading() {
 
 void main() {
   float k = clamp(length(gl_FragCoord.xy - prev_v.xy), 0.0, 1.0);
-  gl_FragColor = k * silhouette() * shading();
+  vec4 texel = texture2D(shading_texture, (gl_FragCoord.xy + 1.0) / 2.0);
+  gl_FragColor = k * silhouette() * shading() * texel;
 }

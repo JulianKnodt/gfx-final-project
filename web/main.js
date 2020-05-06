@@ -129,10 +129,10 @@ const build_menu = scene => {
     });
   scene.add_brush_texture(scene_settings["brush type"]);
 
-  s.add({"shading texture": "shading1.png"}, "shading texture",
-    ["shading1.png", "shading2.png"])
+  s.add({"shading texture": "ricepaper.png"}, "shading texture",
+    ["ricepaper.png", "shading1.png", "shading2.png"])
     .onFinishChange(scene.add_shading_texture.bind(scene));
-  scene.add_shading_texture("shading1.png");
+  scene.add_shading_texture("ricepaper.png");
 
   const drawing = s.addFolder("Drawing");
   // random shading constant
