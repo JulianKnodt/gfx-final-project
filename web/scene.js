@@ -8,6 +8,8 @@ const assert = (value, error) => {
 const n = 0.1;
 const f = 1000;
 
+const sqr = v => v * v;
+
 const deg_to_rad = deg => deg * Math.PI/180;
 
 // Must pass false to transpose matrix
@@ -31,12 +33,18 @@ class Scene {
     this.pos = new THREE.Vector3(0, 0, 0);
     this.at = new THREE.Vector3(0, 0, 1);
     this.up = new THREE.Vector3(0, 1, 0);
+
+    this.velocity = new THREE.Vector3(0, 0, 0);
+    this.deg_velocity = 0;
+
+    this.look_at();
     this.look_at();
     this.perspective(30);
     this.resize();
     this.shading_constant = 0.3;
     this.edge_threshold = 0.3;
     this.shading_smoothness = 0.1;
+    this.time = performance.now();
 
     this.gl.enable(this.gl.DEPTH_TEST);
   }
@@ -122,7 +130,10 @@ class Scene {
     this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
   }
   look_at() {
-    const prev = this.uniforms["world_to_cam"];
+    if (this.uniforms["world_to_cam"]) {
+      this.writeUniform("prev_world_to_cam", "Matrix4fv", MAT_T, this.uniforms["world_to_cam"].v1);
+      // this.writeUniform("prev_cam_to_world", "Matrix4fv", MAT_T, this.uniforms["cam_to_world"].v1);
+    }
     const up = this.up.normalize();
     const dir = this.at.normalize();
     const r = this.at.clone().cross(this.up);
@@ -142,6 +153,10 @@ class Scene {
     // this.frame = this.frame + 1;
     // this.writeUniform("time", "1f", performance.now() - this.start);
     this.gl.drawArrays(this.gl.TRIANGLES, 0, this.triangles);
+    // TODO postprocessing here to add paper effect
+  }
+  paper_effect() {
+    const canvas = this.canvas;
   }
 
   set frame(frame) {
@@ -209,6 +224,27 @@ class Scene {
   moveForward(speed) {
     this.pos.addScaledVector(this.at, speed);
     this.look_at();
+  }
+  // returns whether it needs another render
+  update(dt) {
+    const prev = this.pos.clone();
+    this.pos.addScaledVector(this.velocity, dt);
+    this.velocity.divideScalar(sqr(1 + dt/1000.0));
+
+    const prev_at = this.at.clone();
+    this.at.applyAxisAngle(this.up, deg_to_rad(dt * this.deg_velocity));
+    this.deg_velocity /= sqr(1 + dt/1000.0);
+    this.at.normalize();
+
+    this.look_at();
+    return !(this.pos.equals(prev) && this.at.equals(prev_at));
+  }
+  loop(ts) {
+    const delta = performance.now() - this.time;
+    const needs_render = this.update(delta);
+    this.time = performance.now();
+    if (needs_render) this.render();
+    window.requestAnimationFrame(this.loop.bind(this));
   }
 }
 

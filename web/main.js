@@ -1,7 +1,9 @@
 const movement = {
-  speed: 1,
-  "rotation degrees": 3,
+  speed: 2,
+  rotation_degrees: 3,
 };
+
+const clamp = (v, l, h) => Math.max(Math.min(v, h), l);
 
 const fragment_shaders = (["cel.frag", "shader.frag"]).reduce((acc, n) => {
   acc[n] = undefined;
@@ -41,14 +43,26 @@ window.onload = async () => {
     scene.render();
   }, false);
   window.addEventListener('keydown', e => {
-    if (e.which == 37) scene.rotateHorizontal(-movement["rotation degrees"]);
-    else if (e.which == 39) scene.rotateHorizontal(movement["rotation degrees"]);
-    else if (e.which == 38) scene.moveForward(-movement.speed);
-    else if (e.which == 40) scene.moveForward(movement.speed);
+    if (e.which == 37) {
+      // scene.deg_velocity = clamp(scene.deg_velocity - movement.rotation_degrees, -1, 1);
+      scene.rotateHorizontal(-movement.rotation_degrees);
+    } else if (e.which == 39) {
+      // scene.deg_velocity = clamp(scene.deg_velocity + movement.rotation_degrees, -1, 1);
+      scene.rotateHorizontal(movement.rotation_degrees);
+    } else if (e.which == 38) {
+      // scene.velocity.addScaledVector(scene.at, -movement.speed);
+      // scene.velocity.clampScalar(-0.04, 0.04);
+      scene.moveForward(-movement.speed);
+    } else if (e.which == 40) {
+      // scene.velocity.addScaledVector(scene.at, movement.speed);
+      // scene.velocity.clampScalar(-0.04, 0.04);
+      scene.moveForward(movement.speed);
+    }
     scene.render();
   });
 
   build_menu(scene);
+  window.requestAnimationFrame(scene.loop.bind(scene));
 };
 
 const build_menu = scene => {
@@ -61,9 +75,6 @@ const build_menu = scene => {
     "edge_threshold": 0.1,
     "smoothness": 0.1,
     "fov": 30,
-    "x-pos": 0,
-    "y-pos": 0,
-    "z-pos": 0
   };
   const camera = gui.addFolder('camera');
   camera.add({
@@ -78,36 +89,31 @@ const build_menu = scene => {
       scene.perspective(it)
       scene.render();
     });
-  camera.add(scene_settings, "x-pos", -100, 100)
+  camera.add(scene.pos, "x", -100, 100)
     .onChange(it => {
-      scene.pos.x = it;
       scene.look_at();
       scene.render();
     });
-  camera.add(scene_settings, "y-pos", -100, 100)
+  camera.add(scene.pos, "y", 0, 200)
     .onChange(it => {
-      scene.pos.y = it;
       scene.look_at();
       scene.render();
     });
-  camera.add(scene_settings, "z-pos", -100, 100)
+  camera.add(scene.pos, "z", -100, 100)
     .onChange(it => {
-      scene.pos.z = it;
       scene.look_at();
       scene.render();
     });
   camera.add({
-    "reset": function() {
-      scene.pos.x = 0;
-      scene.pos.y = 0;
-      scene.pos.z = 0;
-
+    "reset": () => {
+      scene.pos.set(0, 0, 0);
       scene.look_at();
       scene.render();
     }
   }, "reset");
   camera.add(movement, "speed");
-  camera.add(movement, "rotation degrees");
+  camera.add(movement, "rotation_degrees");
+
   const s = gui.addFolder('scene');
   s.add(scene_settings, "use default normals")
     .onFinishChange(it => load_obj(scene_settings["source"], it));
@@ -115,7 +121,6 @@ const build_menu = scene => {
     ["teapot.obj", "sponza.obj", "sekiro.obj", "Shujiro_Castle.obj", "torii.obj"])
     .onFinishChange(src => load_obj(src, scene_settings["use default normals"]));
   load_obj(scene_settings.source, scene_settings["use default normals"]);
-
 
   s.add(scene_settings, "brush type", ["brush1.jpg", "brush2.jpg"])
     .onFinishChange(txt => {

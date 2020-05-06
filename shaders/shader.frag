@@ -15,9 +15,13 @@ const vec3 sun = vec3(100, 100, 100);
 varying vec3 w_v;
 varying vec3 w_n;
 varying vec3 w_c;
+
+// previous vertex position on screen space
+varying vec4 prev_v;
+
 // uniform sampler2D bump_map;
 uniform sampler2D brush_texture;
-// TODO change this into a uniform and make it user-specifiable
+
 uniform float edge_threshold;
 uniform float shading_constant;
 uniform float smoothing;
@@ -27,8 +31,6 @@ float aggreg(float v, vec4 s) {
      + s[1] * step(s[1], v)
      + s[2] * step(s[2], v)
      + s[3] * step(s[3], v);
-
-
 }
 
 vec4 edges(float end) {
@@ -92,5 +94,6 @@ vec4 shading() {
 
 
 void main() {
-  gl_FragColor = silhouette() * shading();
+  float k = clamp(length(gl_FragCoord.xy - prev_v.xy), 0.0, 1.0);
+  gl_FragColor = k * silhouette() * shading();
 }
