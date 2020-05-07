@@ -16,8 +16,6 @@ varying vec3 w_v;
 varying vec3 w_n;
 varying vec3 w_c;
 
-// previous vertex position on screen space
-varying vec4 prev_v;
 
 // uniform sampler2D bump_map;
 uniform sampler2D brush_texture;
@@ -25,6 +23,7 @@ uniform sampler2D brush_texture;
 uniform float edge_threshold;
 uniform float shading_constant;
 uniform float smoothing;
+uniform float ink_dryness;
 
 float aggreg(float v, vec4 s) {
     return s[0] * step(s[0], v)
@@ -91,9 +90,14 @@ vec4 shading() {
   // return vec4(shade(u), 1);
 }
 
+float rand(float n){ return fract(sin(n) * 43758.5453123); }
+
+// simulate the effect of some portions of an image being missed
+vec4 fly_white() {
+  return vec4(vec3(rand(dot(gl_FragCoord.xy, vec2(12.9898, 4.1414))) * ink_dryness), 0);
+}
 
 
 void main() {
-  float k = clamp(length(gl_FragCoord.xy - prev_v.xy), 0.0, 1.0);
-  gl_FragColor = k * silhouette() * shading();
+  gl_FragColor = silhouette() * shading() + fly_white();
 }

@@ -5,7 +5,7 @@ const movement = {
 
 const clamp = (v, l, h) => Math.max(Math.min(v, h), l);
 
-const fragment_shaders = (["cel.frag", "shader.frag"]).reduce((acc, n) => {
+const fragment_shaders = (["cel.frag", "shader.frag", "ink.frag"]).reduce((acc, n) => {
   acc[n] = undefined;
   return acc;
 }, {});
@@ -68,13 +68,17 @@ window.onload = async () => {
 const build_menu = scene => {
   const gui = new dat.GUI();
   const scene_settings = {
-    "use default normals": true,
+    "use_default_normals": true,
     "source": "sekiro.obj",
     "brush type": "brush1.jpg",
     "shading_constant": 0.3,
     "edge_threshold": 0.1,
     "smoothness": 0.1,
     "fov": 30,
+
+    "ink density": 0.3,
+    "brush footprint": 0.5,
+    "ink_dryness": scene.ink_dryness,
   };
   const camera = gui.addFolder('camera');
   camera.add({
@@ -115,12 +119,12 @@ const build_menu = scene => {
   camera.add(movement, "rotation_degrees");
 
   const s = gui.addFolder('scene');
-  s.add(scene_settings, "use default normals")
+  s.add(scene_settings, "use_default_normals")
     .onFinishChange(it => load_obj(scene_settings["source"], it));
-  s.add({"source":"sekiro.obj"}, "source",
+  s.add(scene_settings, "source",
     ["teapot.obj", "sponza.obj", "sekiro.obj", "Shujiro_Castle.obj", "torii.obj"])
-    .onFinishChange(src => load_obj(src, scene_settings["use default normals"]));
-  load_obj(scene_settings.source, scene_settings["use default normals"]);
+    .onFinishChange(src => load_obj(src, scene_settings.use_default_normals));
+  load_obj(scene_settings.source, scene_settings.use_default_normals);
 
   s.add(scene_settings, "brush type", ["brush1.jpg", "brush2.jpg"])
     .onFinishChange(txt => {
@@ -149,6 +153,11 @@ const build_menu = scene => {
   drawing.add(scene_settings, "smoothness", 0, 1)
     .onChange(it => {
       scene.shading_smoothness = it;
+      scene.render();
+    });
+  drawing.add(scene_settings, "ink_dryness", 0, 1)
+    .onChange(it => {
+      scene.ink_dryness = it;
       scene.render();
     });
 };

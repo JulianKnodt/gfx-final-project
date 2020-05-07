@@ -44,6 +44,7 @@ class Scene {
     this.shading_constant = 0.3;
     this.edge_threshold = 0.3;
     this.shading_smoothness = 0.1;
+    this.ink_dryness = 0.01;
     this.time = performance.now();
 
     this.gl.enable(this.gl.DEPTH_TEST);
@@ -130,10 +131,6 @@ class Scene {
     this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
   }
   look_at() {
-    if (this.uniforms["world_to_cam"]) {
-      this.writeUniform("prev_world_to_cam", "Matrix4fv", MAT_T, this.uniforms["world_to_cam"].v1);
-      // this.writeUniform("prev_cam_to_world", "Matrix4fv", MAT_T, this.uniforms["cam_to_world"].v1);
-    }
     const up = this.up.normalize();
     const dir = this.at.normalize();
     const r = this.at.clone().cross(this.up);
@@ -154,6 +151,7 @@ class Scene {
     // this.writeUniform("time", "1f", performance.now() - this.start);
     this.gl.drawArrays(this.gl.TRIANGLES, 0, this.triangles);
     // TODO postprocessing here to add paper effect
+    this.paper_effect()
   }
   paper_effect() {
     const canvas = this.canvas;
@@ -215,6 +213,9 @@ class Scene {
 
   set shading_smoothness(t) { this.writeUniform("smoothing", "1f", t); }
   get shading_smoothness() { return this.uniforms["smoothing"].v0; }
+
+  set ink_dryness(t) { this.writeUniform("ink_dryness", "1f", t) }
+  get ink_dryness() { return this.uniforms["ink_dryness"].v0; }
 
   rotateHorizontal(theta) {
     this.at.applyAxisAngle(this.up, deg_to_rad(theta));
