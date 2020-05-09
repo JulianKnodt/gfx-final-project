@@ -62,7 +62,7 @@ window.onload = async () => {
   });
 
   build_menu(scene);
-  window.requestAnimationFrame(scene.loop.bind(scene));
+  // window.requestAnimationFrame(scene.loop.bind(scene));
 };
 
 const build_menu = scene => {
@@ -71,9 +71,9 @@ const build_menu = scene => {
     "use_default_normals": true,
     "source": "sekiro.obj",
     "brush type": "brush1.jpg",
-    "shading_constant": 0.3,
-    "edge_threshold": 0.1,
-    "smoothness": 0.1,
+    "shading_constant": scene.shading_constant,
+    "edge_threshold": scene.edge_threshold,
+    "smoothness": scene.shading_smoothness,
     "fov": 30,
 
     "ink density": 0.3,
@@ -93,21 +93,13 @@ const build_menu = scene => {
       scene.perspective(it)
       scene.render();
     });
-  camera.add(scene.pos, "x", -100, 100)
-    .onChange(it => {
-      scene.look_at();
-      scene.render();
-    });
-  camera.add(scene.pos, "y", 0, 200)
-    .onChange(it => {
-      scene.look_at();
-      scene.render();
-    });
-  camera.add(scene.pos, "z", -100, 100)
-    .onChange(it => {
-      scene.look_at();
-      scene.render();
-    });
+  const update_cam = () => {
+    scene.look_at();
+    scene.render();
+  };
+  for (let v of ["x", "y", "z"])
+    camera.add(scene.pos, v, -200, 500).onChange(update_cam);
+
   camera.add({
     "reset": () => {
       scene.pos.set(0, 0, 0);
@@ -117,16 +109,28 @@ const build_menu = scene => {
   }, "reset");
   camera.add(movement, "speed");
   camera.add(movement, "rotation_degrees");
+  const sm = camera.addFolder('simulated movement');
+  const sim_vel = new THREE.Vector3();
+  const update_vel = () => {
+    scene.velocity = sim_vel;
+    scene.render();
+  };
+  const cap = 100;
+  sm.add(sim_vel, "x", -100, 100).onChange(update_vel);
+  sm.add(sim_vel, "y", -100, 100).onChange(update_vel);
+  sm.add(sim_vel, "z", -100, 100).onChange(update_vel);
 
   const s = gui.addFolder('scene');
   s.add(scene_settings, "use_default_normals")
     .onFinishChange(it => load_obj(scene_settings["source"], it));
-  s.add(scene_settings, "source",
-    ["teapot.obj", "sponza.obj", "sekiro.obj", "Shujiro_Castle.obj", "torii.obj"])
+  const src_files = ["teapot.obj", "sponza.obj", "sekiro.obj", "Shujiro_Castle.obj", "torii.obj",
+    "shanghai.obj", "sakura.obj", "banyan.obj", "catskill_statue.obj", "sphere.obj",
+    "neotokyo.obj"];
+  s.add(scene_settings, "source", src_files)
     .onFinishChange(src => load_obj(src, scene_settings.use_default_normals));
   load_obj(scene_settings.source, scene_settings.use_default_normals);
 
-  s.add(scene_settings, "brush type", ["brush1.jpg", "brush2.jpg"])
+  s.add(scene_settings, "brush type", ["brush1.jpg", "brush2.jpg", "brush3.png"])
     .onFinishChange(txt => {
       scene.add_brush_texture(txt);
       scene.render();
@@ -150,16 +154,71 @@ const build_menu = scene => {
       scene.edge_threshold = it;
       scene.render();
     });
-  drawing.add(scene_settings, "smoothness", 0, 1)
+  drawing.add(scene_settings, "smoothness", 0.0, 1.0)
     .onChange(it => {
       scene.shading_smoothness = it;
       scene.render();
     });
-  drawing.add(scene_settings, "ink_dryness", 0, 1)
+  drawing.add(scene_settings, "ink_dryness", -1, 1)
     .onChange(it => {
       scene.ink_dryness = it;
       scene.render();
     });
+
+  const scenery = gui.addFolder('scenery');
+
+  const sun = scenery.addFolder('sun');
+  const sun_pos = scene.sun;
+  for (let v of ["x", "y", "z"])
+    sun.add(sun_pos, v, -1000, 1000).onChange(_ => {
+      scene.sun = sun_pos;
+      scene.render();
+    });
+
+  const bb = scenery.addFolder('bamboo');
+  const bb_settings = {
+    min_radius: 100,
+    max_radius: 200,
+    min_seg_height: 5,
+    max_seg_height: 20,
+    min_stalk_radius: 2,
+    max_stalk_radius: 8,
+    max_segs: 30,
+    min_segs: 4,
+    bevel_height: 8,
+    max_total_bend: 15,
+    num: 100,
+  };
+  bb_settings.render = () => {
+    const il = new IndexList();
+    for (let i = 0; i < bb_settings.num; i++) {
+      const dir = (new THREE.Vector3(rand_in(-1, 1), 0, rand_in(-1, 1)))
+        .normalize()
+        .multiplyScalar(rand_in(bb_settings.min_radius, bb_settings.max_radius));
+      il.merge(bamboo(dir.x, dir.z, bb_settings));
+    }
+    const [v, vn] = il.ordered_verts();
+    scene.add_verts(v);
+    scene.add_colors(vn);
+    scene.add_normals(vn);
+
+    scene.render();
+  };
+  bb.add(bb_settings, "min_radius", 0, 1000);
+  bb.add(bb_settings, "max_radius", 0, 1000);
+  bb.add(bb_settings, "num", 0, 500).step(1);
+  bb.add(bb_settings, "min_seg_height", 1, 20);
+  bb.add(bb_settings, "max_seg_height", 1, 40);
+
+  bb.add(bb_settings, "min_segs", 1, 20).step(1);
+  bb.add(bb_settings, "max_segs", 1, 40).step(1);
+
+  bb.add(bb_settings, "min_stalk_radius", 0.1, 10);
+  bb.add(bb_settings, "max_stalk_radius", 0.1, 10);
+  bb.add(bb_settings, "bevel_height", 0.1, 10);
+  bb.add(bb_settings, "max_total_bend", 0, 180);
+
+  bb.add(bb_settings, "render");
 };
 
 const load_obj = async (name, add_norms=false) => {
