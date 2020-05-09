@@ -30,21 +30,19 @@ class Scene {
     this.gl.useProgram(this.program);
 
     this.frame = 0;
-    this.pos = new THREE.Vector3(0, 0, 0);
+    this.pos = new THREE.Vector3(0, 1, 0);
     this.at = new THREE.Vector3(0, 0, 1);
     this.up = new THREE.Vector3(0, 1, 0);
-
-    this.velocity = new THREE.Vector3(0, 0, 0);
-    this.deg_velocity = 0;
 
     this.look_at();
     this.look_at();
     this.perspective(30);
     this.resize();
-    this.shading_constant = 0.3;
-    this.edge_threshold = 0.3;
+    this.shading_constant = 0.74;
+    this.edge_threshold = 0.36;
     this.shading_smoothness = 0.1;
-    this.time = performance.now();
+    this.ink_dryness = 0.1;
+    this.sun = {x: 100, y: 100, z: 100};
 
     this.gl.enable(this.gl.DEPTH_TEST);
   }
@@ -130,10 +128,6 @@ class Scene {
     this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
   }
   look_at() {
-    if (this.uniforms["world_to_cam"]) {
-      this.writeUniform("prev_world_to_cam", "Matrix4fv", MAT_T, this.uniforms["world_to_cam"].v1);
-      // this.writeUniform("prev_cam_to_world", "Matrix4fv", MAT_T, this.uniforms["cam_to_world"].v1);
-    }
     const up = this.up.normalize();
     const dir = this.at.normalize();
     const r = this.at.clone().cross(this.up);
@@ -151,9 +145,10 @@ class Scene {
   }
   render() {
     // this.frame = this.frame + 1;
-    // this.writeUniform("time", "1f", performance.now() - this.start);
+    // this.time = performance.now() - this.start;
     this.gl.drawArrays(this.gl.TRIANGLES, 0, this.triangles);
     // TODO postprocessing here to add paper effect
+    this.paper_effect()
   }
   paper_effect() {
     const canvas = this.canvas;
@@ -214,7 +209,22 @@ class Scene {
   get edge_threshold() { return this.uniforms["edge_threshold"].v0; }
 
   set shading_smoothness(t) { this.writeUniform("smoothing", "1f", t); }
-  get shading_smoothness() { return this.uniforms["smoothing"].v0; }
+  get shading_smoothness() { return this.uniforms.smoothing.v0; }
+
+  set ink_dryness(t) { this.writeUniform("ink_dryness", "1f", t) }
+  get ink_dryness() { return this.uniforms.ink_dryness.v0; }
+
+  set velocity({x, y, z}) { this.writeUniform("velocity", "3fv", [x, y, z]) }
+  get velocity() { return this.uniforms.velocity.v0; }
+
+  set time(t) { this.writeUniform("time", "1f", t) }
+  get velocity() { return this.uniforms.time.v0; }
+
+  set sun({x, y, z}) { this.writeUniform("sun", "3f", x, y, z) }
+  get sun() {
+    const s = this.uniforms.sun;
+    return {x: s.v0, y: s.v1, z: s.v2};
+  }
 
   rotateHorizontal(theta) {
     this.at.applyAxisAngle(this.up, deg_to_rad(theta));
@@ -225,6 +235,7 @@ class Scene {
     this.pos.addScaledVector(this.at, speed);
     this.look_at();
   }
+  /*
   // returns whether it needs another render
   update(dt) {
     const prev = this.pos.clone();
@@ -246,5 +257,6 @@ class Scene {
     if (needs_render) this.render();
     window.requestAnimationFrame(this.loop.bind(this));
   }
+  */
 }
 

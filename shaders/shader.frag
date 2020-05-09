@@ -4,20 +4,16 @@ uniform mat4 world_to_cam;
 uniform mat4 cam_to_world;
 uniform mat4 eye_position;
 // Which frame number is this
-uniform int iFrame;
+// uniform int iFrame;
+// uniform float time;
 
 
 const float PI = 3.1415926535897932384626433832795;
 
-// TODO make the light a uniform
-const vec3 sun = vec3(100, 100, 100);
 
 varying vec3 w_v;
 varying vec3 w_n;
 varying vec3 w_c;
-
-// previous vertex position on screen space
-varying vec4 prev_v;
 
 // uniform sampler2D bump_map;
 uniform sampler2D brush_texture;
@@ -27,19 +23,23 @@ uniform sampler2D shading_texture;
 uniform float edge_threshold;
 uniform float shading_constant;
 uniform float smoothing;
+uniform float ink_dryness;
+
+uniform vec3 velocity;
+uniform vec3 sun;
 
 float aggreg(float v, vec4 s) {
-    return s[0] * step(s[0], v)
-     + s[1] * step(s[1], v)
-     + s[2] * step(s[2], v)
-     + s[3] * step(s[3], v);
+  return s[0] * step(s[0], v)
+   + s[1] * step(s[1], v)
+   + s[2] * step(s[2], v)
+   + s[3] * step(s[3], v);
 }
 
 vec4 edges(float end) {
-    vec4 steps;
-    float step_size = end/4.0;
-    for (int i = 0; i < 4; i++) steps[i] = float(i) * step_size;
-    return steps;
+  vec4 steps;
+  float step_size = end/4.0;
+  for (int i = 0; i < 4; i++) steps[i] = float(i) * step_size;
+  return steps;
 }
 
 
@@ -49,6 +49,8 @@ vec3 camera_dir() { return world_to_cam[2].xyz; }
 
 float luminance(vec3 color) { return dot(vec3(0.3, 0.59, 0.11), color); }
 
+float rand(float n){ return fract(sin(n) * 43758.5453123); }
+float rand(vec2 uv) { return rand(dot(uv, vec2(12.9898, 4.1414))); }
 
 // https://en.wikibooks.org/wiki/GLSL_Programming/GLUT/Textured_Spheres#Texture_Mapping
 // should be used for indexing into a texture to get it's position on a sphere.
@@ -69,15 +71,26 @@ vec3 shade(float t) {
 
 vec4 silhouette() {
   vec4 cam_norm = cam_to_world * vec4(w_n, 0);
+
   vec4 pos = world_to_cam * vec4(w_v, 1);
   vec4 cam_eye_vec = -normalize(pos);
   float alignment = dot(cam_eye_vec, cam_norm);
-  // TODO convert this into a multiplication for efficiency?
+
+  vec4 prev_pos = world_to_cam * vec4(w_v - velocity, 1);
+  vec4 prev_cam_eye_vec = -normalize(prev_pos);
+  float prev_alignment = dot(-normalize(prev_pos), cam_norm);
+
+  vec3 r = vec3(normalize(reflect(cam_eye_vec, cam_norm)));
+  float m = 2.0 * sqrt(r.x * r.x + r.y * r.y + (r.z + 1.0) * (r.z + 1.0));
+  vec2 tex_uv = vec2(r.x/m + 0.5, r.y/m + 0.5);
+
   if (alignment >= 0.0 && alignment <= edge_threshold) {
-    vec3 r = vec3(normalize(reflect(cam_eye_vec, cam_norm)));
-    float m = 2.0 * sqrt(r.x * r.x + r.y * r.y + (r.z + 1.0) * (r.z + 1.0));
-    vec2 tex_uv = vec2(r.x/m + 0.5, r.y/m + 0.5);
     return texture2D(brush_texture, tex_uv);
+  } else if (prev_alignment >= 0.0 && prev_alignment <= edge_threshold) {
+    // TODO maybe make this check whether alignment < 0 && prev_alignment > edge_threshold and
+    // vice-versa?
+    return texture2D(brush_texture, tex_uv) *
+      (dot(cam_eye_vec.xyz, prev_cam_eye_vec.xyz) + 1.0) * 0.5;
   } else {
     return vec4(1,1,1,1);
   }
@@ -93,10 +106,12 @@ vec4 shading() {
   // return vec4(shade(u), 1);
 }
 
-
+// simulate the effect of some portions of an image being missed
+vec4 fly_white() {
+  float v = rand(gl_FragCoord.xy) * ink_dryness;
+  return vec4(vec3(v), 0);
+}
 
 void main() {
-  float k = clamp(length(gl_FragCoord.xy - prev_v.xy), 0.0, 1.0);
-  vec4 texel = texture2D(shading_texture, (gl_FragCoord.xy + 1.0) / 2.0);
-  gl_FragColor = k * silhouette() * shading() * texel;
+  gl_FragColor = silhouette() * shading() + fly_white();
 }
