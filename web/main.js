@@ -3,6 +3,7 @@ const movement = {
   rotation_degrees: 3,
 };
 
+
 const clamp = (v, l, h) => Math.max(Math.min(v, h), l);
 
 const fragment_shaders = (["cel.frag", "shader.frag", "ink.frag"]).reduce((acc, n) => {
@@ -21,6 +22,7 @@ const gamma = (color, k=2) => {
 }
 
 window.onload = async () => {
+  window.vm = new VertexManager();
   if (!window.fetch)
     throw "This browser does not support fetch, many things may break";
   // reloads the shaders
@@ -166,6 +168,31 @@ const build_menu = scene => {
     });
 
   const scenery = gui.addFolder('scenery');
+  scenery.add({"bg": false}, 'bg').onChange(use_bg => {
+    const body = document.querySelector("body");
+    if (use_bg) {
+      body.style.backgroundImage =
+        "url(https://cdn.inspirationhut.net/wp-content/uploads/2014/09/rice-paper.jpg)";
+    } else body.style.backgroundImage = "none";
+  });
+
+  scenery.add({"seal": false}, "seal").onChange(add =>  {
+    if (add) {
+      const seal_img = document.createElement('div');
+      seal_img.id = 'seal';
+      // seal_img.style = {
+        seal_img.style.position = "absolute"
+        seal_img.style.right = '4vw'
+        seal_img.style.bottom = '4vw'
+        seal_img.style.width = '4vw'
+        seal_img.style.height = '4vw'
+        seal_img.style.zIndex = '-1'
+        seal_img.style.backgroundColor = 'red';
+        seal_img.style.borderRadius = '5px';
+      // };
+      document.body.appendChild(seal_img);
+    } else document.getElementById('seal').remove();
+  });
 
   const sun = scenery.addFolder('sun');
   const sun_pos = scene.sun;
@@ -197,12 +224,8 @@ const build_menu = scene => {
         .multiplyScalar(rand_in(bb_settings.min_radius, bb_settings.max_radius));
       il.merge(bamboo(dir.x, dir.z, bb_settings));
     }
-    const [v, vn] = il.ordered_verts();
-    scene.add_verts(v);
-    scene.add_colors(vn);
-    scene.add_normals(vn);
-
-    scene.render();
+    window.vm.add_bamboo(il);
+    window.vm.mark_scene(scene);
   };
   bb.add(bb_settings, "min_radius", 0, 1000);
   bb.add(bb_settings, "max_radius", 0, 1000);
@@ -219,6 +242,21 @@ const build_menu = scene => {
   bb.add(bb_settings, "max_total_bend", 0, 180);
 
   bb.add(bb_settings, "render");
+
+  const mtn = scenery.addFolder('mountains');
+  const mtn_settings = {
+    render: () => {
+    },
+  };
+  mtn_settings.render = () => {
+    const il = mountain();
+    const [v, vn]  = il.ordered_verts();
+    scene.add_verts(new Float32Array(v));
+    scene.add_normals(new Float32Array(vn));
+    scene.add_colors(new Float32Array(vn));
+    scene.render();
+  }
+  mtn.add(mtn_settings, "render");
 };
 
 const load_obj = async (name, add_norms=false) => {
@@ -246,12 +284,8 @@ const load_obj = async (name, add_norms=false) => {
       else c.push(...vn.slice(-9));
     }
   }
-  scene.add_verts(v);
-  scene.add_normals(vn);
-  scene.add_colors(c);
-  scene.add_vertex_textures(vt);
-
-  scene.render();
+  window.vm.add_obj({v, vn, c});
+  window.vm.mark_scene(scene);
 };
 
 const isPowerOf2 = n => (n & (n - 1)) == 0;

@@ -10,3 +10,7 @@ We would need to handle all user interaction in JS before modifying parameters p
 shader.
 
 We need to test obj loading.
+
+<!-- rice paper textures -->
+https://cdn.inspirationhut.net/wp-content/uploads/2014/09/rice-paper.jpg
+https://i.pinimg.com/originals/71/b8/ea/71b8ea21b174c23cc38d51285d8cf753.jpg
