@@ -38,6 +38,7 @@ const bamboo = (x, z,
   {
     min_seg_height,
     max_seg_height,
+    base_y,
     max_total_bend,
     min_stalk_radius,
     max_stalk_radius,
@@ -45,9 +46,11 @@ const bamboo = (x, z,
     min_segs,
     verts_per_circle,
     bevel_height,
+    out,
   } = {
     min_seg_height: 5,
     max_seg_height: 10,
+    base_y: 0,
     max_total_bend: 30,
     min_stalk_radius: 5,
     max_stalk_radius: 7,
@@ -55,8 +58,8 @@ const bamboo = (x, z,
     min_segs: 6,
     verts_per_circle: 6,
     bevel_height: 10,
+    out: new IndexList(),
   }) => {
-  const out = new IndexList();
 
   // Select random direction to bend in
   const bend = (new THREE.Vector3(rand_in(-1, 1), 0, rand_in(-1, 1))).normalize();
@@ -65,7 +68,7 @@ const bamboo = (x, z,
 
   // maintain direction upwards
   let up = new THREE.Vector3(0, 1, 0);
-  let curr = new THREE.Vector3(x, 0, z);
+  let curr = new THREE.Vector3(x, base_y, z);
 
   const right = up.clone().cross(bend);
 
@@ -158,6 +161,7 @@ const bamboo = (x, z,
     }
   }
 
+  out.add_face(curr_ring);
   for (let i = 0; i < segments; i ++) {
     const h = rand_in(min_seg_height, max_seg_height);
     const bend = deg_to_rad(Math.random() * bend_max) * Math.sqrt(i/segments);

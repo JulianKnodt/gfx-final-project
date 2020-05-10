@@ -59,6 +59,10 @@ window.onload = async () => {
       // scene.velocity.addScaledVector(scene.at, movement.speed);
       // scene.velocity.clampScalar(-0.04, 0.04);
       scene.moveForward(movement.speed);
+    } else if (e.which == 81 /* q */) {
+      scene.rotateVertical(movement.rotation_degrees);
+    } else if (e.which == 69 /* e */) {
+      scene.rotateVertical(-movement.rotation_degrees);
     }
     scene.render();
   });
@@ -95,6 +99,13 @@ const build_menu = scene => {
       scene.perspective(it)
       scene.render();
     });
+  const update_perspective = () => {
+      scene.perspective(scene_settings.fov);
+      scene.render();
+  };
+  camera.add(scene, "screen_size", 0.00001, 1).onChange(update_perspective);
+  camera.add(scene, "n", 0.1, 10).onChange(update_perspective);
+  camera.add(scene, "f", 1000, 10000).onChange(update_perspective);
   const update_cam = () => {
     scene.look_at();
     scene.render();
@@ -104,6 +115,8 @@ const build_menu = scene => {
 
   camera.add({
     "reset": () => {
+      scene.at.set(0, 0, 1);
+      scene.up.set(0, 1, 0);
       scene.pos.set(0, 0, 0);
       scene.look_at();
       scene.render();
@@ -137,12 +150,7 @@ const build_menu = scene => {
       scene.add_brush_texture(txt);
       scene.render();
     });
-  scene.add_brush_texture(scene_settings["brush type"]);
-
-  s.add({"shading texture": "shading1.png"}, "shading texture",
-    ["shading1.png", "shading2.png"])
-    .onFinishChange(scene.add_shading_texture.bind(scene));
-  scene.add_shading_texture("shading1.png");
+  scene.add_brush_texture("brush1.jpg");
 
   const drawing = s.addFolder("Drawing");
   // random shading constant
@@ -180,16 +188,13 @@ const build_menu = scene => {
     if (add) {
       const seal_img = document.createElement('div');
       seal_img.id = 'seal';
-      // seal_img.style = {
-        seal_img.style.position = "absolute"
-        seal_img.style.right = '4vw'
-        seal_img.style.bottom = '4vw'
-        seal_img.style.width = '4vw'
-        seal_img.style.height = '4vw'
-        seal_img.style.zIndex = '-1'
-        seal_img.style.backgroundColor = 'red';
-        seal_img.style.borderRadius = '5px';
-      // };
+      seal_img.style.position = "absolute"
+      seal_img.style.right = '4vw'
+      seal_img.style.bottom = '4vw'
+      seal_img.style.width = '4vw'
+      seal_img.style.height = '4vw'
+      seal_img.style.backgroundColor = 'red';
+      seal_img.style.borderRadius = '5px';
       document.body.appendChild(seal_img);
     } else document.getElementById('seal').remove();
   });
@@ -206,13 +211,14 @@ const build_menu = scene => {
   const bb_settings = {
     min_radius: 100,
     max_radius: 200,
+    base_y: 0,
     min_seg_height: 5,
     max_seg_height: 20,
     min_stalk_radius: 2,
-    max_stalk_radius: 8,
+    max_stalk_radius: 3,
     max_segs: 30,
     min_segs: 4,
-    bevel_height: 8,
+    bevel_height: 4,
     max_total_bend: 15,
     num: 100,
   };
@@ -222,13 +228,14 @@ const build_menu = scene => {
       const dir = (new THREE.Vector3(rand_in(-1, 1), 0, rand_in(-1, 1)))
         .normalize()
         .multiplyScalar(rand_in(bb_settings.min_radius, bb_settings.max_radius));
-      il.merge(bamboo(dir.x, dir.z, bb_settings));
+      bamboo(dir.x, dir.z, {...bb_settings, out: il});
     }
     window.vm.add_bamboo(il);
     window.vm.mark_scene(scene);
   };
   bb.add(bb_settings, "min_radius", 0, 1000);
   bb.add(bb_settings, "max_radius", 0, 1000);
+  bb.add(bb_settings, "base_y", -1000, 1000);
   bb.add(bb_settings, "num", 0, 500).step(1);
   bb.add(bb_settings, "min_seg_height", 1, 20);
   bb.add(bb_settings, "max_seg_height", 1, 40);
@@ -245,17 +252,27 @@ const build_menu = scene => {
 
   const mtn = scenery.addFolder('mountains');
   const mtn_settings = {
-    render: () => {
-    },
+    min_rad: 200,
+    max_rad: 300,
+    amplitude: 30,
+    rings: 5,
+    precision: 150,
   };
   mtn_settings.render = () => {
-    const il = mountain();
+    const il = mountain(mtn_settings);
     const [v, vn]  = il.ordered_verts();
     scene.add_verts(new Float32Array(v));
     scene.add_normals(new Float32Array(vn));
     scene.add_colors(new Float32Array(vn));
     scene.render();
-  }
+  };
+
+  mtn.add(mtn_settings, "min_rad", 0, 1000);
+  mtn.add(mtn_settings, "max_rad", 10, 2000);
+  mtn.add(mtn_settings, "amplitude", 1, 100);
+  mtn.add(mtn_settings, "rings", 1, 100).step(1);
+  mtn.add(mtn_settings, "precision", 10, 200).step(1);
+
   mtn.add(mtn_settings, "render");
 };
 

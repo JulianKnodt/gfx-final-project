@@ -84,9 +84,7 @@ vec4 silhouette() {
 
   if (alignment >= 0.0 && alignment <= edge_threshold) {
     return texture2D(brush_texture, tex_uv);
-  } else if (prev_alignment >= 0.0 && prev_alignment <= edge_threshold) {
-    // TODO maybe make this check whether alignment < 0 && prev_alignment > edge_threshold and
-    // vice-versa?
+  } else if (prev_alignment <= 0.0 && alignment >= edge_threshold) {
     return texture2D(brush_texture, tex_uv) *
       (dot(cam_eye_vec.xyz, prev_cam_eye_vec.xyz) + 1.0) * 0.5;
   } else {

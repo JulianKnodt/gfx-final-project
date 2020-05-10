@@ -5,9 +5,6 @@ const assert = (value, error) => {
   throw error;
 }
 
-const n = 0.1;
-const f = 1000;
-
 const sqr = v => v * v;
 
 const deg_to_rad = deg => deg * Math.PI/180;
@@ -30,9 +27,12 @@ class Scene {
     this.gl.useProgram(this.program);
 
     this.frame = 0;
-    this.pos = new THREE.Vector3(0, 1, 0);
+    this.pos = new THREE.Vector3(-10, 120, 70);
     this.at = new THREE.Vector3(0, 0, 1);
     this.up = new THREE.Vector3(0, 1, 0);
+    this.n = 0.1;
+    this.f = 1000;
+    this.screen_size = 1;
 
     this.look_at();
     this.look_at();
@@ -112,7 +112,7 @@ class Scene {
     this.gl["uniform" + glslType](loc, v0, v1, v2);
   }
   writeBuffer(data) {
-    assert(data instanceof Float32Array, "Expected Float32Array");
+     assert(data instanceof Float32Array, "Expected Float32Array");
     const buffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, data, this.gl.STATIC_DRAW);
@@ -160,9 +160,12 @@ class Scene {
   // use an orthographic camera to project things
   orthographic() {
     const cam_to_clip = new THREE.Matrix4();
+    const n = this.n;
+    const f = this.f;
+    const s = this.screen_size;
     cam_to_clip.elements = [
-      1/4.0, 0, 0, 0,
-      0, 1/4.0, 0, 0,
+      s, 0, 0, 0,
+      0, s, 0, 0,
       0, 0, -2/(f-n), 0,
       0, 0, -(f+n)/(f-n), 1
     ];
@@ -174,9 +177,12 @@ class Scene {
   perspective(fov=90) {
     const cam_to_clip = new THREE.Matrix4();
     const aspect = 1/Math.tan(deg_to_rad(fov)/2);
+    const n = this.n;
+    const f = this.f;
+    const s = this.screen_size;
     cam_to_clip.elements = [
-      aspect * n/1, 0, 0, 0,
-      0, aspect * n/1, 0, 0,
+      aspect * n/s, 0, 0, 0,
+      0, aspect * n/s, 0, 0,
       0, 0, -(f+n)/(f-n), -1,
       0, 0, -2*f*n/(f-n), 0,
     ];
@@ -226,6 +232,13 @@ class Scene {
   rotateHorizontal(theta) {
     this.at.applyAxisAngle(this.up, deg_to_rad(theta));
     this.at.normalize();
+    this.look_at();
+  }
+  rotateVertical(theta) {
+    const r = this.at.clone().cross(this.up);
+    this.at.applyAxisAngle(r, deg_to_rad(theta));
+    this.at.normalize();
+    this.up = r.cross(this.at);
     this.look_at();
   }
   moveForward(speed) {

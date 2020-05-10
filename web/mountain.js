@@ -68,12 +68,12 @@ const mountain = ({
         return it;
       });
     const next_ring = out.add_verts(next_verts);
-    connect_circles(curr_ring, next_ring).forEach(out.add_face.bind(out));
+    connect_circles(next_ring, curr_ring).forEach(out.add_face.bind(out));
     curr_verts = next_verts;
     curr_ring = next_ring;
   }
   curr_rad += step;
   const last_ring = out.add_verts(circle(center, curr_rad, up, precision));
-  connect_circles(curr_ring, last_ring).forEach(out.add_face.bind(out));
+  connect_circles(last_ring, curr_ring).forEach(out.add_face.bind(out));
   return out;
 };

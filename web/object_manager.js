@@ -23,7 +23,7 @@ class IndexList {
     for (let [v0, v1, v2] of this.faces) {
       const e0 = this.verts[v0].clone().sub(this.verts[v1]);
       const e1 = this.verts[v0].clone().sub(this.verts[v2]);
-      const norm = e0.cross(e1).normalize();
+      const norm = e1.cross(e0).normalize();
       (normal_sets[v0] = normal_sets[v0] || []).push(norm);
       (normal_sets[v1] = normal_sets[v1] || []).push(norm);
       (normal_sets[v2] = normal_sets[v2] || []).push(norm);
@@ -64,6 +64,7 @@ class VertexManager {
   }
   add_bamboo(il) { this.bamboo = il; }
   add_obj(obj) { this.obj = obj; }
+  add_mountain(il) { this.mountain = il }
 
   update() {
     const vs = [];
@@ -77,6 +78,12 @@ class VertexManager {
 
     if (this.bamboo) {
       const [v, vn] = this.bamboo.ordered_verts();
+      v.forEach(v => vs.push(v));
+      vn.forEach(vn => vns.push(vn));
+      vn.forEach(c => cs.push(c));
+    }
+    if (this.mountain) {
+      const [v, vn] = this.mountain.ordered_verts();
       v.forEach(v => vs.push(v));
       vn.forEach(vn => vns.push(vn));
       vn.forEach(c => cs.push(c));
