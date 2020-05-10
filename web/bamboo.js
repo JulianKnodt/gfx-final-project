@@ -82,7 +82,7 @@ const bamboo = (x, z,
 
   const add_leaf = (start, seg) => {
     // downward pointing
-    const dir = (new THREE.Vector3(rand_in(-1, 1), -5, rand_in(-1, 1))).normalize();
+    const dir = (new THREE.Vector3(rand_in(-1, 1), -3, rand_in(-1, 1))).normalize();
     const normal = (new THREE.Vector3(1, 0, 0)).cross(dir);
     const ang = deg_to_rad(rand_in(5, 70));
     const bottom = out.add_verts([
@@ -99,7 +99,7 @@ const bamboo = (x, z,
       start.clone().addScaledVector(dir, seg),
       start.clone().addScaledVector(dir.clone().applyAxisAngle(normal, ang), 0.33 * seg),
     ]);
-    connect_circles(bottom, bump).forEach(it => out.add_face(it));
+    connect_circles(bump, bottom).forEach(it => out.add_face(it));
     out.add_face(bump);
   };
 

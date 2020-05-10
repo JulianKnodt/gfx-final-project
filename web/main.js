@@ -233,6 +233,10 @@ const build_menu = scene => {
     window.vm.add_bamboo(il);
     window.vm.mark_scene(scene);
   };
+  bb_settings.remove = () => {
+    window.vm.add_bamboo(null);
+    window.vm.mark_scene(scene);
+  }
   bb.add(bb_settings, "min_radius", 0, 1000);
   bb.add(bb_settings, "max_radius", 0, 1000);
   bb.add(bb_settings, "base_y", -1000, 1000);
@@ -249,22 +253,23 @@ const build_menu = scene => {
   bb.add(bb_settings, "max_total_bend", 0, 180);
 
   bb.add(bb_settings, "render");
+  bb.add(bb_settings, "remove");
 
   const mtn = scenery.addFolder('mountains');
   const mtn_settings = {
-    min_rad: 200,
-    max_rad: 300,
+    min_rad: 500,
+    max_rad: 600,
     amplitude: 30,
     rings: 5,
     precision: 150,
   };
   mtn_settings.render = () => {
-    const il = mountain(mtn_settings);
-    const [v, vn]  = il.ordered_verts();
-    scene.add_verts(new Float32Array(v));
-    scene.add_normals(new Float32Array(vn));
-    scene.add_colors(new Float32Array(vn));
-    scene.render();
+    window.vm.add_mountain(mountain(mtn_settings));
+    window.vm.mark_scene(scene);
+  };
+  mtn_settings.remove = () => {
+    window.vm.add_mountain(null);
+    window.vm.mark_scene(scene);
   };
 
   mtn.add(mtn_settings, "min_rad", 0, 1000);
@@ -274,6 +279,7 @@ const build_menu = scene => {
   mtn.add(mtn_settings, "precision", 10, 200).step(1);
 
   mtn.add(mtn_settings, "render");
+  mtn.add(mtn_settings, "remove");
 };
 
 const load_obj = async (name, add_norms=false) => {
