@@ -1,42 +1,42 @@
-<!-- Outline from COS 426 Final Project assignment page -->
-
 # Written Report
 
 Julian Knodt, Eric Tsang
 
 ## Abstract
-This project implements hardware-accelerated ink wash painting for 3D objects based on the work of [Park et al.](http://www.myeglab.com/Content/sumi_e_painting.pdf) and adapted for the web using ThreeJS and GLSL.
+This project implements hardware-accelerated ink wash painting for 3D objects
+based on the work of [Park et al.](http://www.myeglab.com/Content/sumi_e_painting.pdf)
+and adapted for the web using ThreeJS and GLSL.
 
 ## Introduction
 ### Goal
 
-Make a non-photo realistic renderer for simulating chinese ink-painting.
+We wanted to make a non-photo realistic renderer for simulating Chinese ink-painting.
 
 #### What did we try to do?
 
-Using prior work on such techniques, implement such a system in GLSL and ThreeJS. Using existing
-3D models simulate the ink-strokes and shading of artwork.
+Using prior work on such techniques, we tried to implement such a system in GLSL and ThreeJS.
+We also tried using existing 3D models simulate the ink-strokes and shading of artwork.
 
 #### Who would benefit?
 
-Anyone who appreciates art. This is just a fun project, but if you enjoy ink based it can be considered
+Anyone who appreciates art. This is just a fun project, but if you enjoy ink-based art it can be considered
 an open-source contribution to the community. The main benefactors of this work are people who
 might want to explore ink-based rendering.
 
 ### Previous Work
 
-There was prior work on realtime "Sumi-e"(chinese ink art) rendering from Hallym Univ. and
+There was prior work on realtime "Sumi-e" (Chinese ink art) rendering from Hallym Univ. and
 Hongik Univ. in South Korea which is what our work is mostly based off. There is also some work
 from the Univ. of Macao but we found that work to be exceptionally vague and hard to understand
 so while it did contribute to some ideas and general understanding, it did not add anything in
 particular.
 
-There is also substantial work on 2D ink renderings, and there was an undergraduate thesis on 2D
-bamboo generation, so that inspired 3D bamboo generation in our work.
+There is also substantial work on 2D ink renderings, as well as an undergraduate thesis on 2D
+bamboo generation which inspired 3D bamboo generation in our work.
 
 #### What related work have other people done?
 
-Okami was a commercial game which utilized ink-style rendering. It's unclear how they performed
+Okami is a commercial game which utilizes ink-style rendering. It's unclear how they performed
 rendering as there is little to no reference on how Okami performs rasterization.
 
 In addition, all works referenced above say they provide implementations, but they are not
@@ -51,7 +51,7 @@ simulation of real ink-strokes, but it is not within our capacity to look at suc
 immediately realize how we can better simulate such things.
 
 ### Approach
-####What approach did we try?
+#### What approach did we try?
 
 We simulate ink-strokes by utilizing one ink texture, and map the texture onto the surface of a
 sphere. Consider the silhouette of a surface to be where the dot product of the camera view vector
@@ -85,14 +85,14 @@ essentially randomly darkening or whitening every color to simulate ink splatter
 
 #### Under what circumstances do we think it should work well?
 
-It does look a little off at certain angles and with certain models that don't have a high
+It can look a little off at certain angles and with certain models that don't have a high
 number of vertices. However, in most circumstances it creates a pretty picture.
 
 #### Why do we think it should work well under those circumstances?
 
-We mostly judge by eye as to whether or not our renderer works well. We have
-reference images from the papers cited above as well as numerous examples of ink wash
-painting available online for visual comparison. With these resources we are able to
+We mostly judge by eye as to whether or not it works well. For visual comparison, we have
+reference images from papers we have cited as well as numerous examples of ink wash
+painting available online. With these resources we are able to
 determine whether or not our renderer works well under various circumstances, and
 in general it does.
 
@@ -103,27 +103,26 @@ We started from the very ground up, adding in both orthographic and perspective 
 adding a bunch of tunable parameters there. We manually import OBJ files and compute the average
 normal for every vertex so we can get a smooth mesh and don't need to rely on normal maps or the
 creator correctly specifying vertex normals. We also added naive camera movement using the arrow
-keys, q, and e. We also have a small static file server which has the OBJ files. We currently do
-not use any of the MTL files as some models did not come with them and loading textures is
-bothersome.
+keys, q, and e. We also have a small static file server which serves the OBJ files. We currently do
+not use any of the MTL files as some models did not come with them and loading textures can be cumbersome.
 
-In the GLSL we perform computation of vertices in world space to clip space ([-1, 1] in all three
-dimensions), and also perform multiple calculations in camera space. We also maintain a JS
-class that keeps track of GLSL variables and vertices.
-
----
-
-For the ink, see [previous sections](####What-approach-did-we-try?).
+On the GLSL side we perform computation of vertices in world space to clip space ([-1, 1] in all three
+dimensions), and also perform multiple calculations in camera space.
+On the JS side, we maintain a class that keeps track of GLSL variables and vertices.
 
 ---
 
-There is also procedural generation of bamboo. Some inspiration was drawn from an undergrad
+For ink rendering techniques, refer to our [approach](####What-approach-did-we-try?) from above.
+
+---
+
+Another major feature we impemented was procedural generation of bamboo. Some inspiration was drawn from an undergrad
 thesis on rendering ink variations of bamboo. We used this as inspiration for procedural
-generation of bamboo. We also chose bamboo because it's essentially a really tall cylinder so
+generation. We also chose bamboo because it's essentially a really tall cylinder so
 it's easy to create.
 
-You can consider bamboo as a series of segments connected by joints. Each joint bulges out a
-bit, and curves outwards from the stalk, and they are somewhat evenly spaced up the entire stalk
+To get into the implementation aspect of it, you can consider bamboo as a series of segments connected by joints.
+Each joint bulges out a bit, and curves outwards from the stalk, and they are somewhat evenly spaced up the entire stalk
 of the bamboo. They also tend to have a lean due to their tall nature.
 
 Thus, we make a bamboo segment by segment, starting from the base and picking some lean
@@ -149,19 +148,19 @@ If we generate a leaf, we add a small downward factor to the direction of the br
 renormalize it, to simulate the weight of leaves and a nice little bend to the branches.
 
 The leaves are essentially just one small and one large diamond connected on the outside, with one
-being a closed face and shifted a bit in the direction of the leaves' normal. They look a bit
-jank if you look directly at one, but when there are a lot they look fine.
+being a closed face and shifted a bit in the direction of the leaves' normal.
+Looking at a single leaf up close is not so pretty, but when there are a lot of them they look fine together.
 
 The purpose of the bamboo is to "stage" the model, or create some background around them. Thus,
 we randomly pick some direction in XZ plane and a radius in some range and create N bamboo in
 this manner. There is no attempt to evenly distribute them, but it ends up looking fine. It
-looks real nice with orthographic or perspective on low FOV with a very dense forest.
+looks great with either the orthographic or perspective projection on low FOV with a very dense forest.
 
 ---
 
 For completeness of scenery, we also throw in rings of mountains around the origin using fractal
 brownian motion. We use the term ring because there are very few radii which we compute
-mountains at it because they are so far away you can't see the difference. We do this by
+mountains at because they are so far away you can't see the difference. We do this by
 creating circles around the origin, and computing fractal brownian motion after converting the
 XZ coordinate to polar. We also linearly interpolate some maximum amplitude from 0 to 1 then
 back to 0 from the minimum radius to the maximum radius. We also add an additional
@@ -175,73 +174,98 @@ cherry on top.
 
 #### Were there several possible implementations?
 
-Yes. What?
+Yes. We only briefly alluded to other papers above since we basically chose the
+first viable rendering algorithm that we could implement, so we do not have
+much to say about the details of other implementations.
 
 #### If there were several possibilities, what were the advantages/disadvantages of each?
 
-This one was the first one that came to mind.
+We don't have much to say about other implementations since we only had time to try one of them,
+and it was mostly a matter of simplicity in terms of choosing a rendering algorithm.
+Also, pretty pictures.
 
 #### Which implementation(s) did we do? Why?
 
-Once again, first that came to mind. Probably because simpler is easier.
+We chose this one because it was the first one that came to mind after our research,
+and it was also the simplest to implement.
 
 #### What did we implement?
 
-See above.
+Most of the details have been covered in previous sections, but the main summary points are that
+we used the ink-wash rendering algorithm from [Park et al.](http://www.myeglab.com/Content/sumi_e_painting.pdf)
+and some of the bamboo generation techniques from [Yangyang He](https://scholarworks.wm.edu/cgi/viewcontent.cgi?article=2187&context=honorstheses)
+in our project.
 
 #### What didn't we implement? Why not?
 
-I was thinking about implementing clouds/fog, but no idea how to model that.
-Was also thinking about applying velocity to rendering and adding some ink dripping effect but
-no idea how to make that work either.
+We were considering implementing clouds and fog but we did not know how to model that.
+We also thought about applying velocity to rendering and adding an ink dripping effect
+but we did not know how to implement it.
 
 ## Results
 #### How did we measure success?
 
-Did it look good or not?
+We tried loading various 3D models in our renderer and judged their appearance by eye.
+We also used real ink-wash paintings from online as visual comparison in addition to
+reference images provided by research papers.
+With that in mind however, if it looked good to us then it was considered a success.
 
 #### What experiments did we execute?
 
-Chucked a ton of OBJ models at it, spend some time looking at the picture and seeing whether we
-liked it or not.
+We loaded a bunch of obj models we found online, including people models as well as architectural models
+to test how model geometry affects our rendering output.
 
 #### What do my results indicate?
 
-Seems fine to me, can always do more.
+Our renderer adds a nice ink-wash effect to all of the models we have tried.
+Some details can look a bit off at certain angles and for models with lots of vertices as mentioned before,
+but overall our renderer was hugely successful at creating the images we wanted.
+
+Rather than include a bunch of images here, it would be best to visit our
+[interactive site](http://ink-renderer.herokuapp.com/) and try it yourself!
 
 ## Discussion
 #### Overall, is the approach we took promising?
 
-I think it's unclear exactly which directions to take this besides adding more procedural
-generation and features but it seems to work pretty well. Notably, we would want to add more
+Yes, it works well. Though it's unclear exactly which directions to take this in
+besides adding more procedural generation and features. Notably, we would want to add more
 shaders and intermediate stages but that might slow down rendering so it's unclear.
 
 #### What different approach or variant of this approach is better?
 
-No idea, gotta try it out and see.
+We would have to try another approach to really find out,
+but that would not be viable for this project given the time constraints.
+Overall, since the implementation we went with was relatively simple and produced great results,
+choosing another approach may just be for artistic preferences since different algorithms
+will produce different graphical outputs, perhaps at the cost of simplicity.
 
 #### What follow-up work should be done next?
 
-Looking at what is missing from authentic art and try to incorporate the small details in there.
-Also adding more dynamics because ink movement would really be amazing to see.
+Looking at what is missing from authentic art and trying to incorporate the
+small details in there would be the next step forward.
+Also, adding more dynamics because ink movement would be amazing to see.
 
 #### What did we learn by doing this project?
 
-How vertex and fragment shaders work. Some about procedural generation, and stuff about the
-general workflow.
+As a baseline, we learned how vertex and fragment shaders work and how they tie in to the web
+through a combination of ThreeJS, WebGL, and GLSL. We also learned some techniques for procedural generation.
+Plus we learned a lot about the general workflow of a graphics project.
 
 ## Conclusion
 #### How effectively did we attain our goal?
 
-I'd rate a solid 5/7.
+We developed an ink-wash renderer that creates pretty 3D models. Since that was our goal,
+our project was definitely a success. The bamboo and mountain generation were more stretch goals,
+so successfully implementing those was also huge. Overall, we attained our goal very effectively.
 
 #### What would the next steps be?
 
-More procedural generation, dynamics, etc.
+Our next steps would be to add fine details, physical dynamics, and perhaps more procedural generation of landscapes.
 
 #### What are issues we need to revisit?
 
-Allow for scaling, transforming, and rotating obj models.
+While the rendering aspects of our project were successful, we could make our program more usable
+by allowing for scaling, transforming, and rotating of obj models.
 
 ## Works Cited
 
@@ -281,4 +305,3 @@ https://sketchfab.com/3d-models/shanghai-city-scene-7dfb633ca4d8430f914d20a5213c
 
 Chinese Banian Tree
 https://sketchfab.com/3d-models/china-banian-tree-c48069bdcd534aee86f098f7ddd5e5b2
-
