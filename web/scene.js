@@ -118,10 +118,11 @@ class Scene {
     this.gl.bufferData(this.gl.ARRAY_BUFFER, data, this.gl.STATIC_DRAW);
   }
   resize() {
+    const s = Math.min(window.innerWidth, window.innerHeight);
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
-    this.gl.viewportWidth = this.canvas.width;
-    this.gl.viewportHeight = this.canvas.height;
+    this.gl.viewportWidth = s;
+    this.gl.viewportHeight = s;
     this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
   }
   look_at() {

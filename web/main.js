@@ -139,8 +139,8 @@ const build_menu = scene => {
   s.add(scene_settings, "use_default_normals")
     .onFinishChange(it => load_obj(scene_settings["source"], it));
   const src_files = ["teapot.obj", "sponza.obj", "sekiro.obj", "Shujiro_Castle.obj", "torii.obj",
-    "shanghai.obj", "banyan.obj", "sphere.obj",
-    "neotokyo.obj"];
+    "shanghai.obj", "banyan.obj", "sphere.obj", /*"wind_spirit.obj",*/ "bus_stop.obj",
+    "lantern.obj", "neotokyo.obj", "lion.obj", "shenron.obj", "isabelle.obj"];
   s.add(scene_settings, "source", src_files)
     .onFinishChange(src => load_obj(src, scene_settings.use_default_normals));
   load_obj(scene_settings.source, scene_settings.use_default_normals);
