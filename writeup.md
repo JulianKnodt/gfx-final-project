@@ -5,7 +5,7 @@ Julian Knodt, Eric Tsang
 ## Abstract
 This project implements hardware-accelerated ink wash painting for 3D objects
 based on the work of [Park et al.](http://www.myeglab.com/Content/sumi_e_painting.pdf)
-and adapted for the web using ThreeJS and GLSL.
+and adapted for the web using GLSL and ThreeJS.
 
 ## Introduction
 ### Goal
@@ -110,11 +110,7 @@ On the GLSL side we perform computation of vertices in world space to clip space
 dimensions), and also perform multiple calculations in camera space.
 On the JS side, we maintain a class that keeps track of GLSL variables and vertices.
 
----
-
-For ink rendering techniques, refer to our [approach](####What-approach-did-we-try?) from above.
-
----
+For ink rendering techniques, refer to the [Approach](#what-approach-did-we-try?) from above.
 
 Another major feature we impemented was procedural generation of bamboo. Some inspiration was drawn from an undergrad
 thesis on rendering ink variations of bamboo. We used this as inspiration for procedural
