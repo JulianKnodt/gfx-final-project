@@ -110,7 +110,7 @@ On the GLSL side we perform computation of vertices in world space to clip space
 dimensions), and also perform multiple calculations in camera space.
 On the JS side, we maintain a class that keeps track of GLSL variables and vertices.
 
-For ink rendering techniques, refer to the [Approach](#what-approach-did-we-try?) from above.
+For ink rendering techniques, refer to the [Approach](#what-approach-did-we-try) from above.
 
 Another major feature we impemented was procedural generation of bamboo. Some inspiration was drawn from an undergrad
 thesis on rendering ink variations of bamboo. We used this as inspiration for procedural
