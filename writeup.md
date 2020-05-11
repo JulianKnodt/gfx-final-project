@@ -51,7 +51,7 @@ simulation of real ink-strokes, but it is not within our capacity to look at suc
 immediately realize how we can better simulate such things.
 
 ### Approach
-#### What approach did we try?
+####What approach did we try?
 
 We simulate ink-strokes by utilizing one ink texture, and map the texture onto the surface of a
 sphere. Consider the silhouette of a surface to be where the dot product of the camera view vector
@@ -110,6 +110,12 @@ bothersome.
 In the GLSL we perform computation of vertices in world space to clip space ([-1, 1] in all three
 dimensions), and also perform multiple calculations in camera space. We also maintain a JS
 class that keeps track of GLSL variables and vertices.
+
+---
+
+For the ink, see [previous sections](####What-approach-did-we-try?).
+
+---
 
 There is also procedural generation of bamboo. Some inspiration was drawn from an undergrad
 thesis on rendering ink variations of bamboo. We used this as inspiration for procedural
