@@ -170,9 +170,7 @@ const bamboo = (x, z,
     curr.addScaledVector(up, h);
 
     const next_ring = out.add_verts(circle(curr, stalk_radius, up))
-    // TODO branching should go here
 
-    // also think about adding an intermediate
     // ring which is slightly smaller
 
     connect_circles(curr_ring, next_ring).forEach(it => out.add_face(it));

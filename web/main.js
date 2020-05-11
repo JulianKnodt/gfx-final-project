@@ -280,6 +280,30 @@ const build_menu = scene => {
 
   mtn.add(mtn_settings, "render");
   mtn.add(mtn_settings, "remove");
+
+  const koi = scenery.addFolder('koi');
+  const koi_settings = {
+    wave: 3,
+    wave_freq: 0.5,
+    size: 5,
+    mouth_size: Math.sqrt(5)
+    body_length: 100,
+    face_length: Math.sqrt(50),
+  };
+  koi_settings.render = () => {
+    const il = coi(0, 10, 0);
+    const [v, vn] = il.ordered_verts();
+    scene.add_verts(new Float32Array(v));
+    scene.add_normals(new Float32Array(vn));
+    scene.add_colors(new Float32Array(vn));
+
+    scene.render();
+  };
+  koi.add(koi_settings, "wave");
+  koi.add(koi_settings, "wave_freq", 0, 1.5);
+  koi.add(koi_settings, "size", 1, 10);
+  koi.add(koi_settings, "mouth_size", 0.1, 10);
+  koi.add(koi_settings, "render");
 };
 
 const load_obj = async (name, add_norms=false) => {
