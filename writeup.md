@@ -19,7 +19,7 @@ Using prior work on such techniques, implement such a system in GLSL and ThreeJS
 
 #### Who would benefit?
 
-People who like art? This is just a fun project, but if you enjoy ink based it can be considered
+Anyone who appreciates art. This is just a fun project, but if you enjoy ink based it can be considered
 an open-source contribution to the community. The main benefactors of this work are people who
 might want to explore ink-based rendering.
 
@@ -39,8 +39,9 @@ bamboo generation, so that inspired 3D bamboo generation in our work.
 Okami was a commercial game which utilized ink-style rendering. It's unclear how they performed
 rendering as there is little to no reference on how Okami performs rasterization.
 
-In addition, all works referenced above say they provide implementations, but no idea where
-those are.
+In addition, all works referenced above say they provide implementations, but they are not
+attached to their respective papers. We were also unable to find them via online search, so we
+could not access them.
 
 #### When do previous approaches fail/succeed?
 
@@ -53,11 +54,11 @@ immediately realize how we can better simulate such things.
 #### What approach did we try?
 
 We simulate ink-strokes by utilizing one ink texture, and map the texture onto the surface of a
-sphere. Consider the silhouette of a surface to be where the dot product between the surface and
-the camera and the normal is above 0 but below a certain threshold. Intuitively this is because
-right at the edge of a surface we expect the surface to be exactly perpendicular to the camera
-vector corresponding to a dot product of 0. We include a thresholding factor to thicken the
-silhouettes.
+sphere. Consider the silhouette of a surface to be where the dot product of the camera view vector
+and the surface normal is roughly i.e. slightly above 0, but below a certain threshold. Intuitively
+this is because right at the edge of a surface we expect the surface normal to be exactly
+perpendicular to the camera vector corresponding to a dot product of 0. We include a thresholding
+factor to thicken the silhouettes.
 
 ```
 silhouette(v) = texture(brush_texture, refl(cam, normal).uv)
@@ -84,13 +85,16 @@ essentially randomly darkening or whitening every color to simulate ink splatter
 
 #### Under what circumstances do we think it should work well?
 
-It does look kind of janky at certain angles and with certain models that don't have a high
-number of vertices but it appears pretty good in most circumstances.
+It does look a little off at certain angles and with certain models that don't have a high
+number of vertices. However, in most circumstances it creates a pretty picture.
 
 #### Why do we think it should work well under those circumstances?
 
-We can see it render and it looks fine. While this may not be a great objective measure, there
-is no better one. We hope that you try it out and evaluate for yourself.
+We mostly judge by eye as to whether or not our renderer works well. We have
+reference images from the papers cited above as well as numerous examples of ink wash
+painting available online for visual comparison. With these resources we are able to
+determine whether or not our renderer works well under various circumstances, and
+in general it does.
 
 ## Methodology
 #### What pieces had to be implemented to execute my approach?
@@ -101,10 +105,10 @@ normal for every vertex so we can get a smooth mesh and don't need to rely on no
 creator correctly specifying vertex normals. We also added naive camera movement using the arrow
 keys, q, and e. We also have a small static file server which has the OBJ files. We currently do
 not use any of the MTL files as some models did not come with them and loading textures is
-annoying.
+bothersome.
 
 In the GLSL we perform computation of vertices in world space to clip space ([-1, 1] in all three
-dimensions), and also perform multiple calculations in camera space. We also maintain a cheap JS
+dimensions), and also perform multiple calculations in camera space. We also maintain a JS
 class that keeps track of GLSL variables and vertices.
 
 There is also procedural generation of bamboo. Some inspiration was drawn from an undergrad
