@@ -1,3 +1,8 @@
+const help_text = `
+Move forward and backward using up and down arrow keys
+Turn using left and right arrows and tilt up and down using q and e.
+For more macroscopic movement, use the sliders in the camera section.`;
+
 const movement = {
   speed: 2,
   rotation_degrees: 3,
@@ -66,6 +71,34 @@ window.onload = async () => {
     }
     scene.render();
   });
+
+  let prev_x = null;
+  let prev_y = null;
+  window.onmousedown = e => {
+    if (e.target.tagName.toLowerCase() !== 'canvas') return;
+    prev_x = e.clientX;
+    prev_y = e.clientY;
+    window.onmouseup = e => {
+      window.onmousemove = null;
+    };
+    window.onmousemove = e => {
+      const delta_x = (e.clientX - prev_x)/window.innerWidth;
+      const delta_y = (e.clientY - prev_y)/window.innerHeight;
+
+      let right = scene.at.clone().cross(scene.up)
+      scene.at.addScaledVector(right, delta_x);
+      scene.at.normalize();
+      right = scene.at.clone().cross(scene.up);
+      scene.at.addScaledVector(scene.up, delta_y);
+      scene.at.normalize();
+      scene.up = right.cross(scene.at);
+      scene.look_at();
+      scene.render();
+
+      prev_x = e.clientX;
+      prev_y = e.clientY;
+    };
+  };
 
   build_menu(scene);
   // window.requestAnimationFrame(scene.loop.bind(scene));
@@ -140,7 +173,7 @@ const build_menu = scene => {
     .onFinishChange(it => load_obj(scene_settings["source"], it));
   const src_files = ["teapot.obj", "sponza.obj", "sekiro.obj", "Shujiro_Castle.obj", "torii.obj",
     "shanghai.obj", "banyan.obj", "sphere.obj", /*"wind_spirit.obj",*/ "bus_stop.obj",
-    "lantern.obj", "neotokyo.obj", "lion.obj", "shenron.obj", "isabelle.obj"];
+    "lantern.obj", "neotokyo.obj", "shenron.obj", "isabelle.obj"];
   s.add(scene_settings, "source", src_files)
     .onFinishChange(src => load_obj(src, scene_settings.use_default_normals));
   load_obj(scene_settings.source, scene_settings.use_default_normals);
@@ -155,6 +188,25 @@ const build_menu = scene => {
     window.vm.add_obj(null);
     window.vm.mark_scene(scene);
   };
+
+  const scale_settings = {
+    curr_scale: 1,
+    rescale_amt: 1.1,
+  };
+
+  s.add(scale_settings, "rescale_amt", 0.5, 1.5);
+  scale_settings.rescale = () => {
+    scale_settings.curr_scale *= scale_settings.rescale_amt;
+    window.vm.rescale_obj(scene, scale_settings.rescale_amt);
+  };
+  scale_settings.reset_scale = () => {
+    window.vm.rescale_obj(scene, 1/scale_settings.curr_scale);
+    scale_settings.curr_scale = 1;
+  };
+
+  s.add(scale_settings, "rescale");
+  s.add(scale_settings, "reset_scale");
+
 
   s.add(scene_settings, "remove");
 
@@ -334,9 +386,27 @@ const build_menu = scene => {
   tail.add(koi_settings, 'tail_width', 0, 5);
   tail.add(koi_settings, 'tail_length', 1, 50);
   tail.add(koi_settings, 'end_tail_size', 0, 2);
+
+  gui.add({help: () => alert(help_text)}, "help");
 };
 
-const load_obj = async (name, add_norms=false) => {
+const get_bounds = vs => {
+  const min = new THREE.Vector3(Infinity);
+  const max = new THREE.Vector3(-Infinity);
+  for (let [x,y,z] of vs) {
+    min.x = Math.min(min.x, x);
+    min.y = Math.min(min.y, y);
+    min.z = Math.min(min.z, z);
+
+    max.x = Math.max(max.x, x);
+    max.y = Math.max(max.y, y);
+    max.z = Math.max(max.z, z);
+  }
+  return [min, max];
+};
+
+
+const load_obj = async (name, add_norms=false, scale=undefined) => {
   const obj_fetch = await fetch("/resources/" + name);
   const obj_src = await obj_fetch.text();
   const obj = await parse_obj(obj_src);

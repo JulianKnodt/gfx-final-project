@@ -60,6 +60,7 @@ class VertexManager {
     this.v = new Float32Array([]);
     this.vn = new Float32Array([]);
     this.c = new Float32Array([]);
+    this.obj_length = 0;
 
   }
   add_bamboo(il) { this.bamboo = il; }
@@ -76,6 +77,7 @@ class VertexManager {
       this.obj.vn.forEach(vn => vns.push(vn));
       this.obj.c.forEach(c => cs.push(c));
     }
+    this.obj_length = vs.length;
 
     if (this.bamboo) {
       const [v, vn] = this.bamboo.ordered_verts();
@@ -98,6 +100,11 @@ class VertexManager {
     this.v = new Float32Array(vs);
     this.vn = new Float32Array(vns);
     this.c = new Float32Array(cs);
+  }
+  rescale_obj(scene, by) {
+    for (let i = 0; i < this.obj_length; i++) this.v[i] *= by;
+    scene.add_verts(this.v);
+    scene.render();
   }
   mark_scene(scene) {
     this.update();
