@@ -151,6 +151,12 @@ const build_menu = scene => {
       scene.render();
     });
   scene.add_brush_texture("brush1.jpg");
+  scene_settings.remove = () => {
+    window.vm.add_obj(null);
+    window.vm.mark_scene(scene);
+  };
+
+  s.add(scene_settings, "remove");
 
   const drawing = s.addFolder("Drawing");
   // random shading constant
@@ -241,16 +247,16 @@ const build_menu = scene => {
   bb.add(bb_settings, "max_radius", 0, 1000);
   bb.add(bb_settings, "base_y", -1000, 1000);
   bb.add(bb_settings, "num", 0, 500).step(1);
-  bb.add(bb_settings, "min_seg_height", 1, 20);
-  bb.add(bb_settings, "max_seg_height", 1, 40);
-
-  bb.add(bb_settings, "min_segs", 1, 20).step(1);
-  bb.add(bb_settings, "max_segs", 1, 40).step(1);
-
-  bb.add(bb_settings, "min_stalk_radius", 0.1, 10);
-  bb.add(bb_settings, "max_stalk_radius", 0.1, 10);
   bb.add(bb_settings, "bevel_height", 0.1, 10);
   bb.add(bb_settings, "max_total_bend", 0, 180);
+
+  const stalk = bb.addFolder('stalk')
+  stalk.add(bb_settings, "min_seg_height", 1, 20);
+  stalk.add(bb_settings, "max_seg_height", 1, 40);
+  stalk.add(bb_settings, "min_segs", 1, 20).step(1);
+  stalk.add(bb_settings, "max_segs", 1, 40).step(1);
+  stalk.add(bb_settings, "min_stalk_radius", 0.1, 10);
+  stalk.add(bb_settings, "max_stalk_radius", 0.1, 10);
 
   bb.add(bb_settings, "render");
   bb.add(bb_settings, "remove");
@@ -283,27 +289,51 @@ const build_menu = scene => {
 
   const koi = scenery.addFolder('koi');
   const koi_settings = {
+    x: 0,
+    y: 0,
+    z: 0,
     wave: 3,
     wave_freq: 0.5,
     size: 5,
-    mouth_size: Math.sqrt(5)
+    mouth_size: Math.sqrt(5),
     body_length: 100,
     face_length: Math.sqrt(50),
+
+    fin_length: 20,
+    fin_width: 20,
+    fin_thickness: 4,
+    fin_cant: 2,
+
+    tail_width: 0.6,
+    tail_length: 20,
+    end_tail_size: 2,
+
+    whisker_radius: 0.5,
   };
   koi_settings.render = () => {
-    const il = coi(0, 10, 0);
-    const [v, vn] = il.ordered_verts();
-    scene.add_verts(new Float32Array(v));
-    scene.add_normals(new Float32Array(vn));
-    scene.add_colors(new Float32Array(vn));
-
-    scene.render();
+    koi_settings.out = new IndexList();
+    window.vm.add_koi(coi(koi_settings.x, koi_settings.y, koi_settings.z, koi_settings));
+    window.mark_scene(scene);
   };
-  koi.add(koi_settings, "wave");
-  koi.add(koi_settings, "wave_freq", 0, 1.5);
+  koi.add(koi_settings, "x", -1000, 1000);
+  koi.add(koi_settings, "y", -1000, 1000);
+  koi.add(koi_settings, "z", -1000, 1000);
+
+  koi.add(koi_settings, "wave", 0, 10);
+  koi.add(koi_settings, "wave_freq", -1.5, 1.5);
   koi.add(koi_settings, "size", 1, 10);
   koi.add(koi_settings, "mouth_size", 0.1, 10);
   koi.add(koi_settings, "render");
+  const fin = koi.addFolder("fin")
+  fin.add(koi_settings, "fin_length", 0, 20);
+  fin.add(koi_settings, "fin_width", 0, 20);
+  fin.add(koi_settings, "fin_thickness", 0, 10);
+  fin.add(koi_settings, "fin_cant", 0, 3);
+
+  const tail = koi.addFolder('tail');
+  tail.add(koi_settings, 'tail_width', 0, 5);
+  tail.add(koi_settings, 'tail_length', 1, 50);
+  tail.add(koi_settings, 'end_tail_size', 0, 2);
 };
 
 const load_obj = async (name, add_norms=false) => {

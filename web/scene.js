@@ -47,7 +47,6 @@ class Scene {
     this.gl.enable(this.gl.DEPTH_TEST);
   }
   add_verts(v) {
-    if (v.length == 0) return;
     assert(v.length % 3 == 0);
     const v_loc = this.gl.getAttribLocation(this.program, "v");
     this.gl.enableVertexAttribArray(v_loc);
@@ -56,7 +55,6 @@ class Scene {
     this.triangles = v.length/3;
   }
   add_normals(vn) {
-    if (vn.length == 0) return;
     assert(vn.length % 3 == 0, "normals do not seem correct");
     const vn_loc = this.gl.getAttribLocation(this.program, "vn");
     this.gl.enableVertexAttribArray(vn_loc);
@@ -65,7 +63,6 @@ class Scene {
   }
   // add colors to the scene, one per vertex
   add_colors(c) {
-    if (c.length == 0) return;
     assert(c.length % 3 == 0, "colors are invalid length");
     const c_loc = this.gl.getAttribLocation(this.program, "c");
     this.gl.enableVertexAttribArray(c_loc);
@@ -74,7 +71,6 @@ class Scene {
   }
   add_vertex_textures(vt) {
     return
-    if (vt.length == 0) return;
     assert(vt.length % 3 == 0, "colors are invalid length");
     this.vertex_textures = new Float32Array(c);
     const vt_loc = this.gl.getAttribLocation(this.program, "vt");
@@ -146,10 +142,6 @@ class Scene {
     // this.time = performance.now() - this.start;
     this.gl.drawArrays(this.gl.TRIANGLES, 0, this.triangles);
     // TODO postprocessing here to add paper effect
-    this.paper_effect()
-  }
-  paper_effect() {
-    const canvas = this.canvas;
   }
 
   set frame(frame) {

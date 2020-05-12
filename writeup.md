@@ -15,7 +15,7 @@ We wanted to make a non-photo realistic renderer for simulating Chinese ink-pain
 #### What did we try to do?
 
 Using prior work on such techniques, we tried to implement such a system in GLSL and ThreeJS.
-We also tried using existing 3D models simulate the ink-strokes and shading of artwork.
+We using existing 3D models and simulate the ink-strokes and shading of artwork.
 
 #### Who would benefit?
 
@@ -110,7 +110,11 @@ On the GLSL side we perform computation of vertices in world space to clip space
 dimensions), and also perform multiple calculations in camera space.
 On the JS side, we maintain a class that keeps track of GLSL variables and vertices.
 
+---
+
 For ink rendering techniques, refer to the [Approach](#what-approach-did-we-try) from above.
+
+---
 
 Another major feature we impemented was procedural generation of bamboo. Some inspiration was drawn from an undergrad
 thesis on rendering ink variations of bamboo. We used this as inspiration for procedural

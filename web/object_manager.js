@@ -65,6 +65,7 @@ class VertexManager {
   add_bamboo(il) { this.bamboo = il; }
   add_obj(obj) { this.obj = obj; }
   add_mountain(il) { this.mountain = il }
+  add_koi(il) { this.koi = il }
 
   update() {
     const vs = [];
@@ -84,6 +85,12 @@ class VertexManager {
     }
     if (this.mountain) {
       const [v, vn] = this.mountain.ordered_verts();
+      v.forEach(v => vs.push(v));
+      vn.forEach(vn => vns.push(vn));
+      vn.forEach(c => cs.push(c));
+    }
+    if (this.koi) {
+      const [v, vn] = this.koi.ordered_verts();
       v.forEach(v => vs.push(v));
       vn.forEach(vn => vns.push(vn));
       vn.forEach(c => cs.push(c));

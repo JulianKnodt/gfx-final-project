@@ -104,13 +104,12 @@ const coi = (x, y, z, {
   for (let i = 0; i < face; i++) {
     curr.addScaledVector(dir, face_step);
     const curr_mouth_size = lerp((i+1)/face, mouth_size, size);
-    // TODO add whiskers here at face/3
     if  (i === ~~(face/3)) {
       const n = add_whiskers(curr_mouth_size, right.clone(), up);
       add_whiskers(curr_mouth_size, right.clone().negate(), up.clone().negate(), n);
     }
     const next_ring = out.add_verts(circle(curr, curr_mouth_size, dir))
-    // TODO add eyes here at face/2
+    // TODO add eyes here at face/2?
     connect_circles(curr_ring, next_ring).forEach(out.add_face.bind(out));
     curr_ring = next_ring;
   }
@@ -129,7 +128,8 @@ const coi = (x, y, z, {
       const curr_right = dir.clone().cross(up);
       add_fin(curr_right, up);
       add_fin(curr_right.negate(), up);
-    } else if (i === ~~(body/2)) {
+    }
+    if (Math.random() > 0.8) {
       const curr_right = dir.clone().cross(up);
       add_fin(up, curr_right);
     }
