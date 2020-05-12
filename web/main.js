@@ -367,6 +367,10 @@ const build_menu = scene => {
     window.vm.add_koi(coi(koi_settings.x, koi_settings.y, koi_settings.z, koi_settings));
     window.vm.mark_scene(scene);
   };
+  koi_settings.remove = () => {
+    window.vm.add_koi(null);
+    window.vm.mark_scene(scene);
+  }
   koi.add(koi_settings, "x", -1000, 1000);
   koi.add(koi_settings, "y", -1000, 1000);
   koi.add(koi_settings, "z", -1000, 1000);
@@ -375,7 +379,6 @@ const build_menu = scene => {
   koi.add(koi_settings, "wave_freq", -1.5, 1.5);
   koi.add(koi_settings, "size", 1, 10);
   koi.add(koi_settings, "mouth_size", 0.1, 10);
-  koi.add(koi_settings, "render");
   const fin = koi.addFolder("fin")
   fin.add(koi_settings, "fin_length", 0, 20);
   fin.add(koi_settings, "fin_width", 0, 20);
@@ -386,6 +389,9 @@ const build_menu = scene => {
   tail.add(koi_settings, 'tail_width', 0, 5);
   tail.add(koi_settings, 'tail_length', 1, 50);
   tail.add(koi_settings, 'end_tail_size', 0, 2);
+
+  koi.add(koi_settings, "render");
+  koi.add(koi_settings, "remove");
 
   gui.add({help: () => alert(help_text)}, "help");
 };
