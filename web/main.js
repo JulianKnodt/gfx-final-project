@@ -313,7 +313,7 @@ const build_menu = scene => {
   koi_settings.render = () => {
     koi_settings.out = new IndexList();
     window.vm.add_koi(coi(koi_settings.x, koi_settings.y, koi_settings.z, koi_settings));
-    window.mark_scene(scene);
+    window.vm.mark_scene(scene);
   };
   koi.add(koi_settings, "x", -1000, 1000);
   koi.add(koi_settings, "y", -1000, 1000);
