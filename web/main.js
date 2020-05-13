@@ -107,38 +107,47 @@ window.onload = async () => {
 const build_menu = scene => {
   const gui = new dat.GUI();
   const scene_settings = {
-    "use_default_normals": true,
-    "source": "sekiro.obj",
+    use_default_normals: true,
+    source: "sekiro.obj",
     "brush type": "brush1.jpg",
-    "shading_constant": scene.shading_constant,
-    "edge_threshold": scene.edge_threshold,
-    "smoothness": scene.shading_smoothness,
-    "fov": 30,
+    shading_constant: scene.shading_constant,
+    edge_threshold: scene.edge_threshold,
+    smoothness: scene.shading_smoothness,
+    fov: 30,
+    is_perspective: true,
 
     "ink density": 0.3,
     "brush footprint": 0.5,
-    "ink_dryness": scene.ink_dryness,
+    ink_dryness: scene.ink_dryness,
   };
   const camera = gui.addFolder('camera');
   camera.add({
-    orthographic: scene.orthographic.bind(scene),
-  }, "orthographic")
+      orthographic: () => {
+        scene_settings.is_perspective = false;
+        scene.orthographic();
+      },
+    }, "orthographic")
     .onFinishChange(scene.render.bind(scene));
   camera.add({
-    perspective: () => scene.perspective(scene_settings.fov),
+    perspective: () => {
+      scene.perspective(scene_settings.fov);
+      scene_settings.is_perspective = true;
+    },
   }, "perspective").onFinishChange(scene.render.bind(scene));
   camera.add(scene_settings, "fov", 5, 180).step(1)
     .onChange(it => {
       scene.perspective(it)
+      scene_settings.is_perspective = true;
       scene.render();
     });
-  const update_perspective = () => {
-      scene.perspective(scene_settings.fov);
-      scene.render();
+  const update_camera = () => {
+    if (scene_settings.is_perspective) scene.perspective(scene_settings.fov);
+    else scene.orthographic();
+    scene.render();
   };
-  camera.add(scene, "screen_size", 0.00001, 1).onChange(update_perspective);
-  camera.add(scene, "n", 0.1, 10).onChange(update_perspective);
-  camera.add(scene, "f", 1000, 10000).onChange(update_perspective);
+  camera.add(scene, "screen_size", 0.001, 1).onChange(update_camera);
+  camera.add(scene, "n", 0.1, 10).onChange(update_camera);
+  camera.add(scene, "f", 1000, 10000).onChange(update_camera);
   const update_cam = () => {
     scene.look_at();
     scene.render();
@@ -403,7 +412,7 @@ const build_menu = scene => {
     radius: 1,
     min_height: 20,
     max_height: 100,
-    max_total_bend: 30,
+    max_total_bend: 90,
     thinning: 1.2
   };
   grass_settings.render = () => {

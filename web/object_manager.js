@@ -92,7 +92,10 @@ class VertexManager {
     this.c = new Float32Array(cs);
   }
   rescale_obj(scene, by) {
-    for (let i = 0; i < this.obj_length; i++) this.v[i] *= by;
+    for (let i = 0; i < this.obj_length; i++) {
+      this.v[i] *= by;
+      this.obj.v[i] *= by;
+    }
     scene.add_verts(this.v);
     scene.render();
   }
