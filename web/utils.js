@@ -14,13 +14,13 @@ const normalize = ([x, y, z]) => {
 
 
 // produces a set of vertex normals for each vertex in an obj file
-function default_normals(obj) {
+function default_normals(obj, flip_norms=false) {
   const normal_sets = {};
   for (let g of obj.groups) {
     for (let [[v0], [v1], [v2]] of g.idxs) {
       const e0 = sub(obj.v[v0], obj.v[v1]);
       const e1 = sub(obj.v[v0], obj.v[v2]);
-      const norm = normalize(cross(e0, e1));
+      const norm = flip_norms ? normalize(cross(e1, e0)) : normalize(cross(e0, e1));
       (normal_sets[v0] = normal_sets[v0] || []).push(norm);
       (normal_sets[v1] = normal_sets[v1] || []).push(norm);
       (normal_sets[v2] = normal_sets[v2] || []).push(norm);

@@ -115,6 +115,7 @@ const build_menu = scene => {
     smoothness: scene.shading_smoothness,
     fov: 30,
     is_perspective: true,
+    flip_norms: false,
 
     "ink density": 0.3,
     "brush footprint": 0.5,
@@ -176,15 +177,18 @@ const build_menu = scene => {
   sm.add(sim_vel, "x", -100, 100).onChange(update_vel);
   sm.add(sim_vel, "y", -100, 100).onChange(update_vel);
   sm.add(sim_vel, "z", -100, 100).onChange(update_vel);
-
-  const s = gui.addFolder('scene');
-  s.add(scene_settings, "use_default_normals")
-    .onFinishChange(it => load_obj(scene_settings["source"], it));
   const src_files = ["teapot.obj", "sponza.obj", "sekiro.obj", "Shujiro_Castle.obj", "torii.obj",
     "shanghai.obj", "banyan.obj", "sphere.obj", /*"wind_spirit.obj",*/ "bus_stop.obj",
     "lantern.obj", "neotokyo.obj", "shenron.obj", "isabelle.obj"];
+
+  const s = gui.addFolder('scene');
   s.add(scene_settings, "source", src_files)
-    .onFinishChange(src => load_obj(src, scene_settings.use_default_normals));
+    .onFinishChange(src => load_obj(src, scene_settings.use_default_normals, scene_settings.flip_norms));
+  s.add(scene_settings, "use_default_normals")
+    .onFinishChange(it => load_obj(scene_settings["source"], it, scene_settings.flip_norms));
+  s.add(scene_settings, "flip_norms")
+    .onFinishChange(it =>
+      load_obj(scene_settings.source, scene_settings.use_default_normals, it));
   load_obj(scene_settings.source, scene_settings.use_default_normals);
 
   s.add(scene_settings, "brush type", ["brush1.jpg", "brush2.jpg", "brush3.png"])
@@ -220,7 +224,6 @@ const build_menu = scene => {
   s.add(scene_settings, "remove");
 
   const drawing = s.addFolder("Drawing");
-  // random shading constant
   drawing.add(scene_settings, "shading_constant", 0, 3)
     .onChange(it => {
       scene.shading_constant = it;
@@ -285,7 +288,7 @@ const build_menu = scene => {
     max_stalk_radius: 3,
     max_segs: 30,
     min_segs: 4,
-    bevel_height: 4,
+    bevel_height: 2,
     max_total_bend: 15,
     num: 100,
   };
@@ -463,11 +466,17 @@ const get_bounds = vs => {
 };
 
 
-const load_obj = async (name, add_norms=false, scale=undefined) => {
-  const obj_fetch = await fetch("/resources/" + name);
-  const obj_src = await obj_fetch.text();
-  const obj = await parse_obj(obj_src);
-  if (add_norms) obj.vn = default_normals(obj);
+const obj_cache = {};
+const load_obj = async (name, add_norms=false, flip_norms=false) => {
+  const obj = await (async () => {
+    if (obj_cache[name]) return obj_cache[name];
+    const obj_fetch = await fetch("/resources/" + name);
+    const obj_src = await obj_fetch.text();
+    const parsed = await parse_obj(obj_src);
+    obj_cache[name] = parsed;
+    return parsed;
+  })();
+  if (add_norms) obj.vn = default_normals(obj, flip_norms);
 
   const v = [];
   const vn = [];
