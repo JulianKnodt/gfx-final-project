@@ -61,12 +61,14 @@ class VertexManager {
     this.vn = new Float32Array([]);
     this.c = new Float32Array([]);
     this.obj_length = 0;
-
+    this.generated = {};
   }
   add_bamboo(il) { this.bamboo = il; }
   add_obj(obj) { this.obj = obj; }
   add_mountain(il) { this.mountain = il }
   add_koi(il) { this.koi = il }
+  add_grass(il) { this.grass = il };
+  add_generated(name, il) { this.generated[name] = il; }
 
   update() {
     const vs = [];
@@ -78,21 +80,9 @@ class VertexManager {
       this.obj.c.forEach(c => cs.push(c));
     }
     this.obj_length = vs.length;
-
-    if (this.bamboo) {
-      const [v, vn] = this.bamboo.ordered_verts();
-      v.forEach(v => vs.push(v));
-      vn.forEach(vn => vns.push(vn));
-      vn.forEach(c => cs.push(c));
-    }
-    if (this.mountain) {
-      const [v, vn] = this.mountain.ordered_verts();
-      v.forEach(v => vs.push(v));
-      vn.forEach(vn => vns.push(vn));
-      vn.forEach(c => cs.push(c));
-    }
-    if (this.koi) {
-      const [v, vn] = this.koi.ordered_verts();
+    for (let name in this.generated) {
+      if (!this.generated[name]) continue;
+      const [v, vn] = this.generated[name].ordered_verts();
       v.forEach(v => vs.push(v));
       vn.forEach(vn => vns.push(vn));
       vn.forEach(c => cs.push(c));

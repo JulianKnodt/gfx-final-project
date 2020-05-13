@@ -288,11 +288,11 @@ const build_menu = scene => {
         .multiplyScalar(rand_in(bb_settings.min_radius, bb_settings.max_radius));
       bamboo(dir.x, dir.z, {...bb_settings, out: il});
     }
-    window.vm.add_bamboo(il);
+    window.vm.add_generated('bamboo', il);
     window.vm.mark_scene(scene);
   };
   bb_settings.remove = () => {
-    window.vm.add_bamboo(null);
+    window.vm.add_generated('bamboo', null);
     window.vm.mark_scene(scene);
   }
   bb.add(bb_settings, "min_radius", 0, 1000);
@@ -322,11 +322,11 @@ const build_menu = scene => {
     precision: 150,
   };
   mtn_settings.render = () => {
-    window.vm.add_mountain(mountain(mtn_settings));
+    window.vm.add_generated('mountain', mountain(mtn_settings));
     window.vm.mark_scene(scene);
   };
   mtn_settings.remove = () => {
-    window.vm.add_mountain(null);
+    window.vm.add_generated('mountain', null);
     window.vm.mark_scene(scene);
   };
 
@@ -364,11 +364,12 @@ const build_menu = scene => {
   };
   koi_settings.render = () => {
     koi_settings.out = new IndexList();
-    window.vm.add_koi(coi(koi_settings.x, koi_settings.y, koi_settings.z, koi_settings));
+    window.vm.add_generated('koi',
+      coi(koi_settings.x, koi_settings.y, koi_settings.z, koi_settings));
     window.vm.mark_scene(scene);
   };
   koi_settings.remove = () => {
-    window.vm.add_koi(null);
+    window.vm.add_generated('koi', null);
     window.vm.mark_scene(scene);
   }
   koi.add(koi_settings, "x", -1000, 1000);
@@ -392,6 +393,47 @@ const build_menu = scene => {
 
   koi.add(koi_settings, "render");
   koi.add(koi_settings, "remove");
+
+  const grss = scenery.addFolder('grass');
+  const grass_settings = {
+    min_create_radius: 0,
+    max_create_radius: 200,
+    num: 500,
+    max_group_size: 5,
+    radius: 1,
+    min_height: 20,
+    max_height: 100,
+    max_total_bend: 30,
+    thinning: 1.2
+  };
+  grass_settings.render = () => {
+    grass_settings.out = new IndexList();
+    for (let i = 0; i < grass_settings.num; i++) {
+      const pos = (new THREE.Vector3(rand_in(-1, 1), 0, rand_in(-1, 1)))
+        .normalize()
+        .multiplyScalar(rand_in(
+          grass_settings.min_create_radius, grass_settings.max_create_radius));
+      // pos.y = base_y;
+      const group_size = ~~rand_in(1, grass_settings.max_group_size);
+      for (let i = 0; i < group_size; i++) grass(pos, grass_settings);
+    };
+    window.vm.add_generated('grass', grass_settings.out);
+    window.vm.mark_scene(scene);
+  };
+  grass_settings.remove = () => {
+    window.vm.add_generated('grass', null);
+    window.vm.mark_scene(scene);
+  };
+  grss.add(grass_settings, "min_create_radius", 0, 500);
+  grss.add(grass_settings, "max_create_radius", 10, 1000);
+  grss.add(grass_settings, "num", 1, 5000).step(1);
+  grss.add(grass_settings, "radius", 0.1, 5);
+  grss.add(grass_settings, "min_height", 0.1, 50);
+  grss.add(grass_settings, "max_height", 0.1, 200);
+  grss.add(grass_settings, "max_total_bend", 0, 180);
+  grss.add(grass_settings, "thinning", 0.1, 2);
+  grss.add(grass_settings, "render");
+  grss.add(grass_settings, "remove");
 
   gui.add({help: () => alert(help_text)}, "help");
 };
