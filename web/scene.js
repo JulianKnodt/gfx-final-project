@@ -108,7 +108,7 @@ class Scene {
     this.gl["uniform" + glslType](loc, v0, v1, v2);
   }
   writeBuffer(data) {
-     assert(data instanceof Float32Array, "Expected Float32Array");
+    assert(data instanceof Float32Array, "Expected Float32Array");
     const buffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, data, this.gl.STATIC_DRAW);
