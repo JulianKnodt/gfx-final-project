@@ -179,7 +179,7 @@ const build_menu = scene => {
   sm.add(sim_vel, "z", -100, 100).onChange(update_vel);
   const src_files = ["teapot.obj", "sponza.obj", "sekiro.obj", "Shujiro_Castle.obj", "torii.obj",
     "shanghai.obj", "banyan.obj", "sphere.obj", /*"wind_spirit.obj",*/ "bus_stop.obj",
-    "lantern.obj", "neotokyo.obj", "shenron.obj", "isabelle.obj"];
+    "lantern.obj", "tokyo.obj", "shenron.obj", "isabelle.obj"];
 
   const s = gui.addFolder('scene');
   s.add(scene_settings, "source", src_files)
