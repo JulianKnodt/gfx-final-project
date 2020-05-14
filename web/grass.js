@@ -29,6 +29,7 @@ const grass = (pos, {
 
     curr_ring = next_ring;
   }
+  out.add_face(curr_ring);
 
   return out;
 };

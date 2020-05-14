@@ -305,3 +305,9 @@ https://sketchfab.com/3d-models/shanghai-city-scene-7dfb633ca4d8430f914d20a5213c
 
 Chinese Banian Tree
 https://sketchfab.com/3d-models/china-banian-tree-c48069bdcd534aee86f098f7ddd5e5b2
+
+Shenron
+https://sketchfab.com/3d-models/shenron-dragon-ball-96e8ad1e206941ce859c5733bec75d30
+
+Isabelle
+https://sketchfab.com/3d-models/isabelle-animal-crossing-9b2774218b8e468aa8c37cdb823bdf7c
