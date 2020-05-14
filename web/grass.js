@@ -19,12 +19,13 @@ const grass = (pos, {
   let dir = new THREE.Vector3(0, 1, 0);
   let curr_ring = out.add_verts(circle(curr, radius, dir));
 
+  out.add_face(curr_ring);
   for (let i = 0; i < n; i++) {
     const k = (i+1)/n;
     dir.applyAxisAngle(bend_perp, bend_step * Math.sqrt(k));
     dir.normalize();
     curr.addScaledVector(dir, step);
-    const next_ring = out.add_verts(circle(curr, Math.pow(1-k, thinning) * radius, dir));
+    const next_ring = out.add_verts(circle(curr, Math.pow(1-k, thinning) * radius + 0.001, dir));
     connect_circles(curr_ring, next_ring).forEach(out.add_face.bind(out));
 
     curr_ring = next_ring;
